@@ -26,6 +26,8 @@ add_executable(macos-dock
     src/dockcorona.h
     src/dockview.cpp
     src/dockview.h
+    src/dockbackend.cpp
+    src/dockbackend.h
 )
 
 target_link_libraries(macos-dock PRIVATE

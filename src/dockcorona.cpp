@@ -93,10 +93,21 @@ void DockCorona::init()
             } else {
                 appletConfig.writeEntry("launchers", QStringList{
                     QStringLiteral("preferred://filemanager"),
-                    QStringLiteral("applications:proton-mail.desktop"),
+                    QStringLiteral("applications:launchpad.desktop"),
                     QStringLiteral("preferred://browser"),
+                    QStringLiteral("applications:org.kde.kdeconnect.sms.desktop"),
+                    QStringLiteral("applications:proton-mail.desktop"),
+                    QStringLiteral("applications:google-maps-geo-handler.desktop"),
+                    QStringLiteral("applications:org.kde.gwenview.desktop"),
+                    QStringLiteral("applications:org.kde.kdeconnect.app.desktop"),
+                    QStringLiteral("applications:org.kde.korganizer.desktop"),
+                    QStringLiteral("applications:org.cesar.kquicknote.desktop"),
+                    QStringLiteral("applications:org.cesar.kvoicememos.desktop"),
+                    QStringLiteral("applications:mpv.desktop"),
                     QStringLiteral("applications:antigravity.desktop"),
-                    QStringLiteral("applications:mpv.desktop")
+                    QStringLiteral("applications:org.cesar.kdropover.desktop"),
+                    QStringLiteral("applications:org.kde.konsole.desktop"),
+                    QStringLiteral("applications:systemsettings.desktop")
                 });
                 appletConfig.writeEntry("elevation", 12);
                 appletConfig.writeEntry("hoverElevation", 8);

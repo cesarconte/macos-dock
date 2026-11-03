@@ -88,6 +88,7 @@ PlasmoidItem {
     property alias taskList: taskList
 
     property bool isStandaloneView: false
+    readonly property bool showTrashAndDownloads: true
 
     readonly property real dockCapsuleWidth: tmf ? tmf.width : tasks.width
     readonly property real dockCapsuleX: tmf ? tmf.x : 0
@@ -812,8 +813,8 @@ PlasmoidItem {
 
             LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
 
-            width: tasks.vertical ? (tasks.iconSize + tasks.horizontalPadding * 2) : (taskList.width + tasks.horizontalPadding * 2)
-            height: tasks.vertical ? (taskList.height + tasks.verticalPadding * 2) : (tasks.iconSize + tasks.verticalPadding * 2)
+            width: tasks.vertical ? (tasks.iconSize + tasks.horizontalPadding * 2) : (dockContent.width + tasks.horizontalPadding * 2)
+            height: tasks.vertical ? (dockContent.height + tasks.verticalPadding * 2) : (tasks.iconSize + tasks.verticalPadding * 2)
 
             anchors {
                 horizontalCenter: tasks.vertical ? undefined : parent.horizontalCenter
@@ -845,30 +846,86 @@ PlasmoidItem {
                 z: -1
             }
 
-            TaskList {
-                id: taskList
-
-                vertical: tasks.vertical
-                LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
+            Item {
+                id: dockContent
                 anchors.centerIn: parent
+                width: taskList.width + (tasks.showTrashAndDownloads ? (dockRightSection.width + tasks.iconSpacing) : 0)
+                height: tasks.vertical ? (taskList.height + (tasks.showTrashAndDownloads ? (dockRightSection.height + tasks.iconSpacing) : 0)) : tasks.iconSize
 
-                count: tasksModel.count
-                iconSpacing: tasks.iconSpacing
+                TaskList {
+                    id: taskList
 
-                width: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.iconSize : Math.max(tasks.tasksLength, implicitWidth))
-                height: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? Math.max(tasks.tasksLength, implicitHeight) : tasks.iconSize)
+                    vertical: tasks.vertical
+                    LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
+                    anchors.left: !tasks.vertical ? parent.left : undefined
+                    anchors.top: tasks.vertical ? parent.top : undefined
+                    anchors.verticalCenter: !tasks.vertical ? parent.verticalCenter : undefined
+                    anchors.horizontalCenter: tasks.vertical ? parent.horizontalCenter : undefined
 
-                onAnimatingChanged: {
-                    if (!animating) {
-                        tasks.publishIconGeometries(children, tasks);
+                    count: tasksModel.count
+                    iconSpacing: tasks.iconSpacing
+
+                    width: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? tasks.iconSize : Math.max(tasks.tasksLength, implicitWidth))
+                    height: tasks.shouldShrinkToZero ? 0 : (tasks.vertical ? Math.max(tasks.tasksLength, implicitHeight) : tasks.iconSize)
+
+                    onAnimatingChanged: {
+                        if (!animating) {
+                            tasks.publishIconGeometries(children, tasks);
+                        }
+                    }
+
+                    Repeater {
+                        id: taskRepeater
+
+                        delegate: Task {
+                            tasksRoot: tasks
+                        }
                     }
                 }
 
-                Repeater {
-                    id: taskRepeater
+                Row {
+                    id: dockRightSection
+                    visible: tasks.showTrashAndDownloads
+                    anchors.left: !tasks.vertical ? taskList.right : undefined
+                    anchors.leftMargin: !tasks.vertical ? tasks.iconSpacing : 0
+                    anchors.top: tasks.vertical ? taskList.bottom : undefined
+                    anchors.topMargin: tasks.vertical ? tasks.iconSpacing : 0
+                    anchors.verticalCenter: !tasks.vertical ? parent.verticalCenter : undefined
+                    anchors.horizontalCenter: tasks.vertical ? parent.horizontalCenter : undefined
+                    spacing: tasks.iconSpacing
 
-                    delegate: Task {
+                    // macOS Dock permanent divider
+                    Rectangle {
+                        width: tasks.vertical ? Math.round(tasks.iconSize * 0.55) : 1
+                        height: !tasks.vertical ? Math.round(tasks.iconSize * 0.55) : 1
+                        anchors.verticalCenter: !tasks.vertical ? parent.verticalCenter : undefined
+                        anchors.horizontalCenter: tasks.vertical ? parent.horizontalCenter : undefined
+                        radius: 0.5
+                        color: Kirigami.Theme.backgroundColor.hslLightness < 0.5
+                            ? Qt.rgba(1.0, 1.0, 1.0, 0.28)
+                            : Qt.rgba(0.0, 0.0, 0.0, 0.22)
+                    }
+
+                    // Downloads stack folder
+                    DockSpecialItem {
+                        itemIndex: taskRepeater.count
                         tasksRoot: tasks
+                        title: i18n("Descargas")
+                        iconSource: "folder-download"
+                        isDownloads: true
+                    }
+
+                    // Trash Can
+                    DockSpecialItem {
+                        itemIndex: taskRepeater.count + 1
+                        tasksRoot: tasks
+                        title: typeof dockBackend !== "undefined" && dockBackend.isTrashFull
+                            ? i18n("Papelera (%1 elementos)", dockBackend.trashItemCount)
+                            : i18n("Papelera")
+                        iconSource: typeof dockBackend !== "undefined" && dockBackend.isTrashFull
+                            ? "user-trash-full"
+                            : "user-trash"
+                        isTrash: true
                     }
                 }
             }

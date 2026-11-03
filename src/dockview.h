@@ -26,6 +26,8 @@ namespace LayerShellQt
 class Window;
 }
 
+class DockBackend;
+
 class DockView : public QQuickView
 {
     Q_OBJECT
@@ -51,5 +53,6 @@ private:
     QPointer<PlasmaQuick::AppletQuickItem> m_appletInterface;
     QPointer<PlasmaQuick::ConfigView> m_configView;
     LayerShellQt::Window *m_layerWindow = nullptr;
+    DockBackend *m_backend = nullptr;
     int m_dockCanvasHeight = 128;
 };

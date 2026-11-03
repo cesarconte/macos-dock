@@ -20,12 +20,16 @@
 #include <plasmaquick/configview.h>
 
 #include <LayerShellQt/Window>
+#include "dockbackend.h"
 
 DockView::DockView(Plasma::Corona *corona, QWindow *parent)
     : QQuickView(parent)
     , m_corona(corona)
 {
     setColor(Qt::transparent);
+
+    m_backend = new DockBackend(this);
+    rootContext()->setContextProperty(QStringLiteral("dockBackend"), m_backend);
 
     if (auto screen = QGuiApplication::primaryScreen()) {
         const QRect geom = screen->geometry();
