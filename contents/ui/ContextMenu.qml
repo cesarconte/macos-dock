@@ -53,11 +53,15 @@ PlasmaExtras.Menu {
 
     Component.onCompleted: {
         // Cannot have "Connections" as child of PlasmaExtras.Menu.
-        backend.showAllPlaces.connect(showContextMenuWithAllPlaces);
+        if (backend && backend.showAllPlaces) {
+            backend.showAllPlaces.connect(showContextMenuWithAllPlaces);
+        }
     }
 
     Component.onDestruction: {
-        backend.showAllPlaces.disconnect(showContextMenuWithAllPlaces);
+        if (backend && backend.showAllPlaces) {
+            backend.showAllPlaces.disconnect(showContextMenuWithAllPlaces);
+        }
     }
 
     function showContextMenuWithAllPlaces(): void {
@@ -747,16 +751,6 @@ PlasmaExtras.Menu {
         }
     }
 
-    PlasmaExtras.MenuItem {
-        text: i18n("Test Bounce Animation")
-        icon: "media-playback-start"
-        onClicked: {
-            if (menu.visualParent && menu.visualParent.triggerTestBounce) {
-                menu.visualParent.triggerTestBounce();
-            }
-        }
-    }
-
     PlasmaExtras.MenuItem { separator: true }
 
     PlasmaExtras.MenuItem {
@@ -771,20 +765,6 @@ PlasmaExtras.Menu {
         onClicked: configureAction.trigger()
 
         Component.onCompleted: configureAction = Plasmoid.internalAction("configure")
-    }
-
-    PlasmaExtras.MenuItem {
-        property PlasmaCore.Action editModeAction: null
-
-        enabled: editModeAction && editModeAction.enabled
-        visible: editModeAction && editModeAction.visible
-
-        text: editModeAction ? editModeAction.text : ""
-        icon: editModeAction ? editModeAction.icon : ""
-
-        onClicked: editModeAction.trigger()
-
-        Component.onCompleted: editModeAction = Plasmoid.containment.internalAction("configure")
     }
 
     PlasmaExtras.MenuItem { separator: true }
