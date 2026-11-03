@@ -5,6 +5,7 @@
 
 #include "dockcorona.h"
 #include "dockview.h"
+#include "dockbackend.h"
 
 #include <QGuiApplication>
 #include <QScreen>
@@ -181,6 +182,27 @@ void DockCorona::toggleLaunchpad()
         if (auto item = PlasmaQuick::AppletQuickItem::itemForApplet(m_drawerApplet)) {
             item->setExpanded(!item->isExpanded());
         }
+    }
+}
+
+void DockCorona::openTrash()
+{
+    if (m_view && m_view->backend()) {
+        m_view->backend()->openTrash();
+    }
+}
+
+void DockCorona::emptyTrash()
+{
+    if (m_view && m_view->backend()) {
+        m_view->backend()->emptyTrash();
+    }
+}
+
+void DockCorona::openDownloads()
+{
+    if (m_view && m_view->backend()) {
+        m_view->backend()->openDownloads();
     }
 }
 

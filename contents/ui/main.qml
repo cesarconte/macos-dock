@@ -919,10 +919,10 @@ PlasmoidItem {
                     DockSpecialItem {
                         itemIndex: taskRepeater.count + 1
                         tasksRoot: tasks
-                        title: (typeof dockBackend !== "undefined" && dockBackend && dockBackend.isTrashFull)
-                            ? i18n("Papelera (%1 elementos)", dockBackend.trashItemCount)
+                        title: (tasks.dockBackend && tasks.dockBackend.isTrashFull)
+                            ? i18n("Papelera (%1 elementos)", tasks.dockBackend.trashItemCount)
                             : i18n("Papelera")
-                        iconSource: (typeof dockBackend !== "undefined" && dockBackend && dockBackend.isTrashFull)
+                        iconSource: (tasks.dockBackend && tasks.dockBackend.isTrashFull)
                             ? "user-trash-full"
                             : "user-trash"
                         isTrash: true

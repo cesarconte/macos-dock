@@ -21,6 +21,8 @@ PlasmaCore.ToolTipArea {
     property bool isTrash: false
     property bool isDownloads: false
 
+    readonly property var backend: tasksRoot ? tasksRoot.dockBackend : ((typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : null)
+
     mainText: title
     location: tasksRoot ? tasksRoot.effectiveLocation : PlasmaCore.Types.BottomEdge
 
@@ -65,11 +67,10 @@ PlasmaCore.ToolTipArea {
         acceptedButtons: Qt.LeftButton
         onTapped: {
             triggerBounce();
-            var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
-            if (specialItem.isTrash && backend) {
-                backend.openTrash();
-            } else if (specialItem.isDownloads && backend) {
-                backend.openDownloads();
+            if (specialItem.isTrash && specialItem.backend) {
+                specialItem.backend.openTrash();
+            } else if (specialItem.isDownloads && specialItem.backend) {
+                specialItem.backend.openDownloads();
             }
         }
     }
@@ -86,12 +87,12 @@ PlasmaCore.ToolTipArea {
     DropArea {
         anchors.fill: parent
         onDropped: drop => {
-            var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
-            if (drop.hasUrls && backend) {
+            if (drop.hasUrls && specialItem.backend) {
+                specialItem.triggerBounce();
                 if (specialItem.isTrash) {
-                    backend.moveToTrash(drop.urls);
+                    specialItem.backend.moveToTrash(drop.urls);
                 } else if (specialItem.isDownloads) {
-                    backend.copyToDownloads(drop.urls);
+                    specialItem.backend.copyToDownloads(drop.urls);
                 }
                 drop.acceptProposedAction();
             }
@@ -175,9 +176,8 @@ PlasmaCore.ToolTipArea {
             text: i18n("Abrir papelera")
             icon.name: "document-open"
             onTriggered: {
-                var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
-                if (backend) {
-                    backend.openTrash();
+                if (specialItem.backend) {
+                    specialItem.backend.openTrash();
                 }
             }
         }
@@ -185,11 +185,10 @@ PlasmaCore.ToolTipArea {
         PlasmaComponents3.MenuItem {
             text: i18n("Vaciar papelera")
             icon.name: "trash-empty"
-            enabled: Boolean((typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.isTrashFull : (typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend ? tasksRoot.dockBackend.isTrashFull : false))
+            enabled: Boolean(specialItem.backend && specialItem.backend.isTrashFull)
             onTriggered: {
-                var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
-                if (backend) {
-                    backend.emptyTrash();
+                if (specialItem.backend) {
+                    specialItem.backend.emptyTrash();
                 }
             }
         }

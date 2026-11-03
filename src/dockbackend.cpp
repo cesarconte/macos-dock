@@ -13,16 +13,30 @@
 #include <QStandardPaths>
 #include <QTimer>
 
+#include <KIO/CopyJob>
+#include <KIO/EmptyTrashJob>
+
 DockBackend::DockBackend(QObject *parent)
     : QObject(parent)
 {
     m_trashFilesPath = QDir::homePath() + QStringLiteral("/.local/share/Trash/files");
+    const QString trashInfoPath = QDir::homePath() + QStringLiteral("/.local/share/Trash/info");
+    const QString trashRootPath = QDir::homePath() + QStringLiteral("/.local/share/Trash");
     m_downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
 
     QDir().mkpath(m_trashFilesPath);
+    QDir().mkpath(trashInfoPath);
+
     m_watcher.addPath(m_trashFilesPath);
+    m_watcher.addPath(trashInfoPath);
+    m_watcher.addPath(trashRootPath);
 
     connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &DockBackend::checkTrash);
+
+    auto timer = new QTimer(this);
+    timer->setInterval(2000);
+    connect(timer, &QTimer::timeout, this, &DockBackend::checkTrash);
+    timer->start();
 
     checkTrash();
 }
@@ -58,23 +72,29 @@ void DockBackend::refreshTrash()
 
 void DockBackend::openTrash()
 {
+    if (QProcess::startDetached(QStringLiteral("dolphin"), {QStringLiteral("trash:/")})) {
+        return;
+    }
+    if (QProcess::startDetached(QStringLiteral("kioclient"), {QStringLiteral("exec"), QStringLiteral("trash:/")})) {
+        return;
+    }
     QDesktopServices::openUrl(QUrl(QStringLiteral("trash:/")));
 }
 
 void DockBackend::emptyTrash()
 {
-    QProcess *proc = new QProcess(this);
-    connect(proc, &QProcess::finished, this, [this, proc]() {
-        proc->deleteLater();
-        checkTrash();
+    auto *job = KIO::emptyTrash();
+    connect(job, &KJob::result, this, [this](KJob *job) {
+        if (!job->error()) {
+            checkTrash();
 
-        // Native PipeWire playback for trash empty sound
-        const QString soundPath = QStringLiteral("/usr/share/sounds/ocean/stereo/trash-empty.oga");
-        if (QFile::exists(soundPath)) {
-            QProcess::startDetached(QStringLiteral("pw-play"), {soundPath});
+            // Native PipeWire playback for trash empty sound
+            const QString soundPath = QStringLiteral("/usr/share/sounds/ocean/stereo/trash-empty.oga");
+            if (QFile::exists(soundPath)) {
+                QProcess::startDetached(QStringLiteral("pw-play"), {soundPath});
+            }
         }
     });
-    proc->start(QStringLiteral("gio"), {QStringLiteral("trash"), QStringLiteral("--empty")});
 }
 
 void DockBackend::openDownloads()
@@ -87,21 +107,12 @@ void DockBackend::moveToTrash(const QList<QUrl> &urls)
     if (urls.isEmpty()) {
         return;
     }
-    QStringList args;
-    args << QStringLiteral("trash");
-    for (const auto &url : urls) {
-        if (url.isLocalFile()) {
-            args << url.toLocalFile();
-        }
-    }
-    if (args.count() > 1) {
-        QProcess *proc = new QProcess(this);
-        connect(proc, &QProcess::finished, this, [this, proc]() {
-            proc->deleteLater();
+    auto *job = KIO::trash(urls);
+    connect(job, &KJob::result, this, [this](KJob *job) {
+        if (!job->error()) {
             checkTrash();
-        });
-        proc->start(QStringLiteral("gio"), args);
-    }
+        }
+    });
 }
 
 void DockBackend::setLaunchpadCallback(std::function<void()> cb)

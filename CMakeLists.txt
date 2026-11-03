@@ -15,7 +15,7 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 
 find_package(Qt6 6.6 REQUIRED COMPONENTS Core Gui Widgets Quick Qml DBus)
-find_package(KF6 6.0 REQUIRED COMPONENTS CoreAddons WindowSystem I18n Config Package DBusAddons)
+find_package(KF6 6.0 REQUIRED COMPONENTS CoreAddons WindowSystem I18n Config Package DBusAddons KIO)
 find_package(Plasma 6.0 REQUIRED)
 find_package(PlasmaQuick 6.0 REQUIRED)
 find_package(LayerShellQt REQUIRED)
@@ -43,6 +43,7 @@ target_link_libraries(macos-dock PRIVATE
     KF6::ConfigCore
     KF6::Package
     KF6::DBusAddons
+    KF6::KIOCore
     Plasma::Plasma
     Plasma::PlasmaQuick
     LayerShellQt::Interface

@@ -28,6 +28,9 @@ public:
 
 public Q_SLOTS:
     void toggleLaunchpad();
+    void openTrash();
+    void emptyTrash();
+    void openDownloads();
 
 private:
     Plasma::Containment *m_containment = nullptr;

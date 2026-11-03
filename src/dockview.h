@@ -38,6 +38,7 @@ public:
 
     void setApplet(Plasma::Applet *applet);
     void showConfigurationInterface();
+    DockBackend *backend() const { return m_backend; }
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
