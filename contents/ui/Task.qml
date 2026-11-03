@@ -50,8 +50,8 @@ PlasmaCore.ToolTipArea {
         : 0.0
 
     readonly property bool isPinned: Boolean(model.IsLauncher || (model.LauncherUrlWithoutIcon && tasksRoot && tasksRoot.hasLauncher(model.LauncherUrlWithoutIcon)))
-    readonly property bool isDividerTask: tasksRoot && tasksRoot.hasDivider && tasksRoot.firstUnpinnedIndex === index
-    readonly property int dividerOffset: isDividerTask ? tasksRoot.dividerSpan : 0
+    readonly property bool isDividerTask: false
+    readonly property int dividerOffset: 0
 
     z: inPopup ? 0 : Math.round(effectiveZoom * 100)
 
@@ -1034,7 +1034,7 @@ PlasmaCore.ToolTipArea {
 
     Rectangle {
         id: dockDivider
-        visible: task.isDividerTask && !task.inPopup
+        visible: false
         z: -1
 
         width: tasksRoot.vertical ? Math.round(tasksRoot.iconSize * 0.55) : 1

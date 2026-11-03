@@ -80,43 +80,47 @@ void DockCorona::init()
 
     if (appletPtr) {
         KConfigGroup appletConfig = appletPtr->config();
-        if (!appletConfig.hasKey("launchers")) {
-            KSharedConfig::Ptr plasmaConfig = KSharedConfig::openConfig(QStringLiteral("plasma-org.kde.plasma.desktop-appletsrc"));
-            KConfigGroup oldConfig = plasmaConfig->group(QStringLiteral("Containments"))
-                                                 .group(QStringLiteral("424"))
-                                                 .group(QStringLiteral("Applets"))
-                                                 .group(QStringLiteral("431"))
-                                                 .group(QStringLiteral("Configuration"))
-                                                 .group(QStringLiteral("General"));
-            if (oldConfig.hasKey("launchers")) {
-                oldConfig.copyTo(&appletConfig);
-            } else {
-                appletConfig.writeEntry("launchers", QStringList{
-                    QStringLiteral("preferred://filemanager"),
-                    QStringLiteral("applications:launchpad.desktop"),
-                    QStringLiteral("preferred://browser"),
-                    QStringLiteral("applications:org.kde.kdeconnect.sms.desktop"),
-                    QStringLiteral("applications:proton-mail.desktop"),
-                    QStringLiteral("applications:google-maps-geo-handler.desktop"),
-                    QStringLiteral("applications:org.kde.gwenview.desktop"),
-                    QStringLiteral("applications:org.kde.kdeconnect.app.desktop"),
-                    QStringLiteral("applications:org.kde.korganizer.desktop"),
-                    QStringLiteral("applications:org.cesar.kquicknote.desktop"),
-                    QStringLiteral("applications:org.cesar.kvoicememos.desktop"),
-                    QStringLiteral("applications:mpv.desktop"),
-                    QStringLiteral("applications:antigravity.desktop"),
-                    QStringLiteral("applications:org.cesar.kdropover.desktop"),
-                    QStringLiteral("applications:org.kde.konsole.desktop"),
-                    QStringLiteral("applications:systemsettings.desktop")
-                });
-                appletConfig.writeEntry("elevation", 12);
-                appletConfig.writeEntry("hoverElevation", 8);
-                appletConfig.writeEntry("iconSpacing", 12);
-                appletConfig.writeEntry("zoomBlastRadius", 1);
-                appletConfig.writeEntry("zoomEnabled", true);
-                appletConfig.writeEntry("zoomMultiplier", 1.5);
-                appletConfig.writeEntry("containerBackgroundType", 4);
-            }
+        KConfigGroup generalConfig = appletConfig.group(QStringLiteral("General"));
+
+        const QStringList defaultLaunchers = {
+            QStringLiteral("preferred://filemanager"),
+            QStringLiteral("applications:launchpad.desktop"),
+            QStringLiteral("preferred://browser"),
+            QStringLiteral("applications:org.kde.kdeconnect.sms.desktop"),
+            QStringLiteral("applications:proton-mail.desktop"),
+            QStringLiteral("applications:google-maps-geo-handler.desktop"),
+            QStringLiteral("applications:org.kde.gwenview.desktop"),
+            QStringLiteral("applications:org.kde.kdeconnect.app.desktop"),
+            QStringLiteral("applications:org.kde.korganizer.desktop"),
+            QStringLiteral("applications:org.cesar.kquicknote.desktop"),
+            QStringLiteral("applications:org.cesar.kvoicememos.desktop"),
+            QStringLiteral("applications:mpv.desktop"),
+            QStringLiteral("applications:antigravity.desktop"),
+            QStringLiteral("applications:org.cesar.kdropover.desktop"),
+            QStringLiteral("applications:org.kde.konsole.desktop"),
+            QStringLiteral("applications:systemsettings.desktop")
+        };
+
+        const QStringList currentLaunchers = generalConfig.readEntry("launchers", QStringList{});
+        if (currentLaunchers.size() < defaultLaunchers.size()) {
+            generalConfig.writeEntry("launchers", defaultLaunchers);
+            generalConfig.writeEntry("elevation", 12);
+            generalConfig.writeEntry("hoverElevation", 8);
+            generalConfig.writeEntry("iconSpacing", 12);
+            generalConfig.writeEntry("zoomBlastRadius", 1);
+            generalConfig.writeEntry("zoomEnabled", true);
+            generalConfig.writeEntry("zoomMultiplier", 1.5);
+            generalConfig.writeEntry("containerBackgroundType", 4);
+            generalConfig.sync();
+
+            appletConfig.writeEntry("launchers", defaultLaunchers);
+            appletConfig.writeEntry("elevation", 12);
+            appletConfig.writeEntry("hoverElevation", 8);
+            appletConfig.writeEntry("iconSpacing", 12);
+            appletConfig.writeEntry("zoomBlastRadius", 1);
+            appletConfig.writeEntry("zoomEnabled", true);
+            appletConfig.writeEntry("zoomMultiplier", 1.5);
+            appletConfig.writeEntry("containerBackgroundType", 4);
             appletConfig.sync();
         }
 

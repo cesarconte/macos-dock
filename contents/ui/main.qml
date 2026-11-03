@@ -235,7 +235,7 @@ PlasmoidItem {
         return -1;
     }
 
-    readonly property bool hasDivider: firstUnpinnedIndex > 0
+    readonly property bool hasDivider: false
 
     readonly property real screenAvailableLength: {
         let fullLength = 0;
