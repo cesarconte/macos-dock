@@ -84,6 +84,11 @@ PlasmoidItem {
 
     property alias taskList: taskList
 
+    readonly property real dockCapsuleWidth: tmf ? tmf.width : tasks.width
+    readonly property real dockCapsuleX: tmf ? tmf.x : 0
+    readonly property real dockCapsuleHeight: tmf ? tmf.height : tasks.height
+    readonly property real dockCapsuleY: tmf ? tmf.y : 0
+
     preferredRepresentation: fullRepresentation
 
     readonly property int preferredIconSize: Plasmoid.configuration.iconSize || 48

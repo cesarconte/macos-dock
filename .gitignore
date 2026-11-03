@@ -5,3 +5,12 @@
 .directory
 .DS_Store
 *.log
+
+# Compilación
+build/
+bin/
+CMakeFiles/
+CMakeCache.txt
+*.ninja
+.ninja_*
+*.user
