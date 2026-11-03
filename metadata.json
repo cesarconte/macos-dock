@@ -1,0 +1,24 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "yugurta@gmail.com",
+                "Name": "Cesar"
+            }
+        ],
+        "Category": "Windows and Tasks",
+        "Description": "High-fidelity macOS Golden Gate Dock with magnification and liquid glass for KDE Plasma 6.8 (Wayland)",
+        "EnabledByDefault": true,
+        "Icon": "preferences-system-windows",
+        "Id": "com.cesar.macosdock",
+        "License": "GPL-2.0-or-later",
+        "Name": "macOS Dock (Golden Gate)",
+        "Version": "1.0.0",
+        "Website": "https://github.com/cesar/macos-dock"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": [
+        "org.kde.plasma.multitasking"
+    ]
+}

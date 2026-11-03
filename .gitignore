@@ -1,0 +1,7 @@
+# Archivos temporales
+*.swp
+*~
+*.autosave
+.directory
+.DS_Store
+*.log
