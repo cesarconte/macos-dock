@@ -22,6 +22,20 @@ PlasmaCore.ToolTipArea {
     property bool isTrash: false
     property bool isDownloads: false
 
+    readonly property Component stackDialogComponent: Qt.createComponent("StackDialog.qml")
+    property QtObject stackDialog: null
+
+    function toggleStack(): void {
+        if (!stackDialog && stackDialogComponent) {
+            stackDialog = stackDialogComponent.createObject(specialItem, {
+                visualParent: specialItem
+            });
+        }
+        if (stackDialog) {
+            stackDialog.visible = !stackDialog.visible;
+        }
+    }
+
     mainText: title
     location: tasksRoot ? tasksRoot.effectiveLocation : PlasmaCore.Types.BottomEdge
 
@@ -69,7 +83,7 @@ PlasmaCore.ToolTipArea {
             if (specialItem.isTrash) {
                 DockBackend.openTrash();
             } else if (specialItem.isDownloads) {
-                DockBackend.openDownloads();
+                toggleStack();
             }
         }
     }
@@ -79,6 +93,8 @@ PlasmaCore.ToolTipArea {
         onTapped: {
             if (specialItem.isTrash) {
                 trashContextMenu.popup();
+            } else if (specialItem.isDownloads) {
+                downloadsContextMenu.popup();
             }
         }
     }
@@ -190,6 +206,26 @@ PlasmaCore.ToolTipArea {
             enabled: DockBackend.isTrashFull
             onTriggered: {
                 DockBackend.emptyTrash();
+            }
+        }
+    }
+
+    PlasmaComponents3.Menu {
+        id: downloadsContextMenu
+
+        PlasmaComponents3.MenuItem {
+            text: i18n("Abrir carpeta Descargas")
+            icon.name: "folder-open"
+            onTriggered: {
+                DockBackend.openDownloads();
+            }
+        }
+
+        PlasmaComponents3.MenuItem {
+            text: i18n("Ver como Pila (Stack)")
+            icon.name: "view-list-icons"
+            onTriggered: {
+                toggleStack();
             }
         }
     }

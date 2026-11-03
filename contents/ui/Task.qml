@@ -757,16 +757,6 @@ PlasmaCore.ToolTipArea {
     }
 
     Loader {
-        id: taskProgressOverlayLoader
-
-        anchors.fill: frame
-        asynchronous: true
-        active: task.smartLauncherItem && task.smartLauncherItem.progressVisible
-
-        source: "TaskProgressOverlay.qml"
-    }
-
-    Loader {
         id: iconBox
 
         anchors {
@@ -851,6 +841,15 @@ PlasmaCore.ToolTipArea {
         ]
     }
 
+    Loader {
+        id: taskProgressOverlayLoader
+        anchors.fill: iconBox
+        asynchronous: true
+        active: task.smartLauncherItem && task.smartLauncherItem.progressVisible
+        source: "TaskProgressOverlay.qml"
+        z: 10
+    }
+
     property bool testBounce: false
 
     Timer {
@@ -864,8 +863,8 @@ PlasmaCore.ToolTipArea {
         testBounceTimer.restart();
     }
 
-    readonly property real bounceJumpHeight: Math.min(10, Math.max(6, Math.round(tasksRoot.iconSize * 0.18)))
-    readonly property real bounceReboundHeight: Math.max(2, Math.round(bounceJumpHeight * 0.3))
+    readonly property real bounceJumpHeight: Math.max(16, Math.round((tasksRoot ? tasksRoot.iconSize : 48) * 0.52))
+    readonly property real bounceReboundHeight: Math.max(5, Math.round(bounceJumpHeight * 0.32))
 
     readonly property real bounceOffset: {
         if (!tasksRoot.vertical) {

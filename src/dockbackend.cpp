@@ -65,6 +65,11 @@ int DockBackend::trashItemCount() const
     return m_trashItemCount;
 }
 
+QString DockBackend::downloadsPath() const
+{
+    return m_downloadsPath;
+}
+
 void DockBackend::checkTrash()
 {
     QDir dir(m_trashFilesPath);
@@ -134,6 +139,13 @@ void DockBackend::openDownloads()
         return;
     }
     auto *job = new KIO::OpenUrlJob(QUrl::fromLocalFile(m_downloadsPath));
+    job->start();
+}
+
+void DockBackend::openUrl(const QUrl &url)
+{
+    qDebug() << "DockBackend::openUrl() CALLED with" << url;
+    auto *job = new KIO::OpenUrlJob(url);
     job->start();
 }
 

@@ -1,49 +1,43 @@
 /*
-    SPDX-FileCopyrightText: 2016 Kai Uwe Broulik <kde@privat.broulik.de>
-
+    SPDX-FileCopyrightText: 2026 Cesar <yugurta@gmail.com>
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
 import QtQuick
-import QtQuick.Templates as T
 
-import org.kde.ksvg as KSvg
-import org.kde.plasma.plasmoid
+Item {
+    id: progressOverlay
+    anchors.fill: parent
 
-import "code/TaskTools.js" as TaskTools
+    readonly property real progressVal: task.smartLauncherItem ? Math.min(1.0, Math.max(0.0, task.smartLauncherItem.progress / 100.0)) : 0.0
 
-T.ProgressBar {
-    id: control
+    // macOS Progress Pill Track
+    Rectangle {
+        id: track
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Math.max(2, Math.round(parent.height * 0.06))
 
-    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding)
+        width: Math.round(parent.width * 0.75)
+        height: Math.max(4, Math.round(parent.height * 0.09))
+        radius: height / 2
 
-    hoverEnabled: false
-    padding: 0
+        color: Qt.rgba(0, 0, 0, 0.6)
+        border.color: Qt.rgba(255, 255, 255, 0.3)
+        border.width: 1
 
-    from: 0
-    to: 100
-    value: task.smartLauncherItem.progress
-
-    contentItem: Item {
-        LayoutMirroring.enabled: Application.layoutDirection === Qt.RightToLeft
-        LayoutMirroring.childrenInherit: false
-
-        clip: true
-
-        KSvg.FrameSvgItem {
-            id: progressFrame
-
+        // Progress Fill
+        Rectangle {
             anchors.left: parent.left
-            width: parent.width * control.position
-            height: parent.height
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: Math.max(parent.height, Math.round(parent.width * progressOverlay.progressVal))
+            radius: parent.radius
 
-            imagePath: "widgets/tasks"
-            prefix: TaskTools.taskPrefix("progress", Plasmoid.location).concat(TaskTools.taskPrefix("hover", Plasmoid.location))
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#FFFFFF" }
+                GradientStop { position: 1.0; color: "#DCDCDC" }
+            }
         }
     }
-
-    background: null
 }

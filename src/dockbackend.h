@@ -16,6 +16,7 @@ class DockBackend : public QObject
     Q_OBJECT
     Q_PROPERTY(bool isTrashFull READ isTrashFull NOTIFY trashChanged)
     Q_PROPERTY(int trashItemCount READ trashItemCount NOTIFY trashChanged)
+    Q_PROPERTY(QString downloadsPath READ downloadsPath CONSTANT)
 
 public:
     static DockBackend *instance();
@@ -24,11 +25,13 @@ public:
 
     bool isTrashFull() const;
     int trashItemCount() const;
+    QString downloadsPath() const;
 
 public Q_SLOTS:
     void openTrash();
     void emptyTrash();
     void openDownloads();
+    void openUrl(const QUrl &url);
     void toggleLaunchpad();
     void setLaunchpadCallback(std::function<void()> cb);
     void moveToTrash(const QList<QUrl> &urls);

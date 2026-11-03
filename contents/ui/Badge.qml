@@ -1,61 +1,66 @@
 /*
-    SPDX-FileCopyrightText: 2018 Kai Uwe Broulik <kde@privat.broulik.de>
-
+    SPDX-FileCopyrightText: 2026 Cesar <yugurta@gmail.com>
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 
 import QtQuick
-
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.kirigami as Kirigami
 
-// This top-level item is an opaque background that goes behind the colored
-// background, for contrast. It's not an Item since that it would be square,
-// and not round, as required here
-Rectangle {
+Item {
     id: badgeRect
 
     property alias text: label.text
     property alias textColor: label.color
     property int number: 0
 
-    implicitWidth: Math.max(height, Math.round(label.contentWidth + radius / 2)) // Add some padding around.
-    implicitHeight: implicitWidth
+    readonly property bool isSingleDigit: number >= 0 && number < 10
 
-    radius: height / 2
+    implicitHeight: 20
+    implicitWidth: isSingleDigit ? height : Math.max(height, label.contentWidth + height * 0.55)
 
-    color: Kirigami.Theme.backgroundColor
-
-    // Colored background
+    // Soft drop shadow
     Rectangle {
-        anchors.fill: parent
-        radius: height / 2
-
-        color: Qt.alpha(Kirigami.Theme.highlightColor, 0.3)
-        border.color: Kirigami.Theme.highlightColor
-        border.width: 1
+        anchors.fill: bg
+        anchors.topMargin: 1.5
+        radius: bg.radius
+        color: Qt.rgba(0, 0, 0, 0.35)
+        z: 0
     }
 
-    // Number
-    PlasmaComponents3.Label {
-        id: label
-        anchors.centerIn: parent
-        width: height
-        height: Math.min(Kirigami.Units.gridUnit * 2, Math.round(parent.height))
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        fontSizeMode: Text.VerticalFit
-        font.pointSize: 1024
-        minimumPointSize: 5
-        text: {
-            if (badgeRect.number < 0) {
-                return i18nc("Invalid number of new messages, overlay, keep short", "—");
-            } else if (badgeRect.number > 9999) {
-                return i18nc("Over 9999 new messages, overlay, keep short", "9,999+");
-            } else {
-                return badgeRect.number.toLocaleString(Qt.locale(), 'f', 0);
+    // macOS Apple Red Pill
+    Rectangle {
+        id: bg
+        anchors.fill: parent
+        radius: height / 2
+        z: 1
+
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#FF4D42" }
+            GradientStop { position: 1.0; color: "#D70015" }
+        }
+
+        border.color: "#FFFFFF"
+        border.width: Math.max(1.2, Math.round(badgeRect.height * 0.08))
+
+        Text {
+            id: label
+            anchors.centerIn: parent
+            color: "#FFFFFF"
+            font.bold: true
+            font.pixelSize: Math.max(8, Math.round(badgeRect.height * 0.58))
+            font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            text: {
+                if (badgeRect.number < 0) {
+                    return "—";
+                } else if (badgeRect.number > 9999) {
+                    return "9999+";
+                } else {
+                    return badgeRect.number.toString();
+                }
             }
         }
-        textFormat: Text.PlainText
     }
 }
