@@ -153,6 +153,24 @@ PlasmaCore.ToolTipArea {
     }
 
     readonly property bool isRunning: Boolean(task.model.IsWindow || (task.childCount > 0))
+    readonly property bool isTaskActive: {
+        if (Boolean(task.model.IsActive)) {
+            return true;
+        }
+        if (task.childCount > 0) {
+            try {
+                for (let i = 0; i < task.childCount; ++i) {
+                    const childIdx = tasksModel.makeModelIndex(task.index, i);
+                    if (tasksModel.data(childIdx, TaskManager.AbstractTasksModel.IsActive)) {
+                        return true;
+                    }
+                }
+            } catch (e) {
+                // Guard against unready indexes
+            }
+        }
+        return false;
+    }
     readonly property bool demandsAttention: hasAttention || Boolean(task.model.IsDemandingAttention || (task.smartLauncherItem && task.smartLauncherItem.urgent) || task.model.IsStartup)
 
     active: !inPopup && !tasksRoot.groupDialog && task.contextMenu?.status !== PlasmaExtras.Menu.Open
@@ -901,27 +919,92 @@ PlasmaCore.ToolTipArea {
         }
     }
 
+    // macOS Golden Gate active application reflection / spotlight glow
+    Rectangle {
+        id: activeSpotlight
+        visible: !task.inPopup && task.isTaskActive
+        z: -1
+        width: Math.round(tasksRoot.iconSize * 0.72)
+        height: 5
+        radius: 2.5
+        opacity: task.isTaskActive ? 1.0 : 0.0
+
+        anchors {
+            horizontalCenter: tasksRoot.vertical ? undefined : parent.horizontalCenter
+            horizontalCenterOffset: (!tasksRoot.vertical && isDividerTask) ? Math.round(dividerOffset / 2) : 0
+            verticalCenter: tasksRoot.vertical ? parent.verticalCenter : undefined
+            verticalCenterOffset: (tasksRoot.vertical && isDividerTask) ? Math.round(dividerOffset / 2) : 0
+            bottom: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? parent.bottom : undefined
+            bottomMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation !== PlasmaCore.Types.TopEdge) ? -1 : 0
+            top: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? parent.top : undefined
+            topMargin: (!tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge) ? -1 : 0
+            left: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? parent.left : undefined
+            leftMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.LeftEdge) ? -1 : 0
+            right: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? parent.right : undefined
+            rightMargin: (tasksRoot.vertical && tasksRoot.effectiveLocation === PlasmaCore.Types.RightEdge) ? -1 : 0
+        }
+
+        gradient: Gradient {
+            orientation: tasksRoot.vertical ? Gradient.Vertical : Gradient.Horizontal
+            GradientStop { position: 0.0; color: "transparent" }
+            GradientStop {
+                position: 0.5
+                color: Kirigami.Theme.backgroundColor.hslLightness < 0.5
+                    ? Qt.rgba(1.0, 1.0, 1.0, 0.22)
+                    : Qt.rgba(0.0, 0.0, 0.0, 0.12)
+            }
+            GradientStop { position: 1.0; color: "transparent" }
+        }
+
+        Behavior on opacity {
+            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        }
+    }
+
     Rectangle {
         id: runningDot
         visible: task.isRunning && !task.inPopup
-        width: 4
-        height: 4
-        radius: 2
+        width: task.isTaskActive ? 5 : 4
+        height: task.isTaskActive ? 5 : 4
+        radius: width / 2
         readonly property bool isDarkTheme: Kirigami.Theme.backgroundColor.hslLightness < 0.5
         color: {
             if (isDarkTheme) {
-                return task.model.IsActive ? Qt.rgba(1.0, 1.0, 1.0, 0.95) : Qt.rgba(1.0, 1.0, 1.0, 0.55);
+                return task.isTaskActive ? Qt.rgba(1.0, 1.0, 1.0, 1.0) : Qt.rgba(1.0, 1.0, 1.0, 0.50);
             } else {
-                return task.model.IsActive ? Qt.rgba(0.12, 0.12, 0.12, 0.90) : Qt.rgba(0.20, 0.20, 0.20, 0.45);
+                return task.isTaskActive ? Qt.rgba(0.08, 0.08, 0.08, 0.95) : Qt.rgba(0.18, 0.18, 0.18, 0.45);
             }
         }
 
+        Behavior on width {
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        }
+        Behavior on height {
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        }
         Behavior on color {
             ColorAnimation { duration: 200 }
         }
 
+        // Soft bloom/glow halo for active frontmost app
+        Rectangle {
+            id: dotGlow
+            visible: task.isTaskActive
+            anchors.centerIn: parent
+            width: parent.width + 5
+            height: parent.height + 5
+            radius: width / 2
+            color: runningDot.isDarkTheme ? Qt.rgba(1.0, 1.0, 1.0, 0.35) : Qt.rgba(0.0, 0.0, 0.0, 0.18)
+            z: -1
+            opacity: task.isTaskActive ? 1.0 : 0.0
+
+            Behavior on opacity {
+                NumberAnimation { duration: 200 }
+            }
+        }
+
         readonly property real padOffset: {
-            const pad = tasksRoot ? (tasksRoot.vertical ? tasksRoot.horizontalPadding : tasksRoot.verticalPadding) : 8;
+            const pad = tasksRoot ? (tasksRoot.vertical ? tasksRoot.horizontalPadding : tasksRoot.verticalPadding) : 6;
             return Math.max(1, Math.round((pad - height) / 2));
         }
 
@@ -1036,7 +1119,7 @@ PlasmaCore.ToolTipArea {
         },
         State {
             name: "active"
-            when: task.model.IsActive
+            when: task.isTaskActive
 
             PropertyChanges {
                 frame.basePrefix: "focus"

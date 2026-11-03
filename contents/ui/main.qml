@@ -97,12 +97,8 @@ PlasmoidItem {
     readonly property int configuredIconSpacing: (Plasmoid.configuration.iconSpacing !== undefined && Plasmoid.configuration.iconSpacing >= 0)
         ? Plasmoid.configuration.iconSpacing
         : 4
-    readonly property int horizontalPadding: Plasmoid.configuration.horizontalPadding !== undefined
-        ? Plasmoid.configuration.horizontalPadding
-        : 10
-    readonly property int verticalPadding: Plasmoid.configuration.verticalPadding !== undefined
-        ? Plasmoid.configuration.verticalPadding
-        : 8
+    readonly property int horizontalPadding: Math.max(10, (Plasmoid.configuration.horizontalPadding !== undefined ? Plasmoid.configuration.horizontalPadding : 10))
+    readonly property int verticalPadding: Math.max(6, (Plasmoid.configuration.verticalPadding !== undefined ? Plasmoid.configuration.verticalPadding : 6))
     readonly property int elevation: Plasmoid.configuration.elevation !== undefined
         ? Plasmoid.configuration.elevation
         : 8
