@@ -47,6 +47,9 @@ PlasmoidItem {
     }
 
     readonly property int effectiveLocation: {
+        if (isStandaloneView) {
+            return PlasmaCore.Types.BottomEdge;
+        }
         if (Plasmoid.location === PlasmaCore.Types.LeftEdge || Plasmoid.location === PlasmaCore.Types.RightEdge
             || Plasmoid.location === PlasmaCore.Types.TopEdge || Plasmoid.location === PlasmaCore.Types.BottomEdge) {
             return Plasmoid.location;

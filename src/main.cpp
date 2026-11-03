@@ -29,11 +29,10 @@ int main(int argc, char **argv)
     format.setOption(QSurfaceFormat::ResetNotification);
     QSurfaceFormat::setDefaultFormat(format);
 
-    // Disable fixed positions workaround for Wayland
-    qputenv("QT_WAYLAND_DISABLE_FIXED_POSITIONS", {});
+    // Allow manual fixed positions in Qt Wayland so popups/tooltips map properly to global coordinates
+    qputenv("QT_WAYLAND_DISABLE_FIXED_POSITIONS", "1");
 
     QApplication app(argc, argv);
-    qunsetenv("QT_WAYLAND_DISABLE_FIXED_POSITIONS");
 
     app.setApplicationVersion(QStringLiteral("1.0.0"));
     app.setOrganizationDomain(QStringLiteral("cesar.org"));

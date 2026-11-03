@@ -27,6 +27,13 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
 {
     setColor(Qt::transparent);
 
+    if (auto screen = QGuiApplication::primaryScreen()) {
+        const QRect geom = screen->geometry();
+        setPosition(QPoint(geom.x(), geom.y() + geom.height() - m_dockCanvasHeight));
+        resize(geom.width(), m_dockCanvasHeight);
+        connect(screen, &QScreen::geometryChanged, this, &DockView::updateScreenGeometry);
+    }
+
     m_layerWindow = LayerShellQt::Window::get(this);
     if (m_layerWindow) {
         m_layerWindow->setScope(QStringLiteral("macos-dock"));
@@ -37,10 +44,6 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
         m_layerWindow->setDesiredSize(QSize(0, m_dockCanvasHeight));
         m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
         m_layerWindow->setCloseOnDismissed(false);
-    }
-
-    if (auto screen = QGuiApplication::primaryScreen()) {
-        connect(screen, &QScreen::geometryChanged, this, &DockView::updateScreenGeometry);
     }
 }
 
@@ -136,6 +139,9 @@ void DockView::updateScreenGeometry()
     }
 
     const QRect geom = screen->geometry();
+    const QPoint dockPos(geom.x(), geom.y() + geom.height() - m_dockCanvasHeight);
+
+    setPosition(dockPos);
     resize(geom.width(), m_dockCanvasHeight);
 
     if (m_layerWindow) {
