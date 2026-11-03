@@ -9,6 +9,7 @@
 #include <QList>
 #include <QUrl>
 #include <QFileSystemWatcher>
+#include <functional>
 
 class DockBackend : public QObject
 {
@@ -27,6 +28,8 @@ public Q_SLOTS:
     void openTrash();
     void emptyTrash();
     void openDownloads();
+    void toggleLaunchpad();
+    void setLaunchpadCallback(std::function<void()> cb);
     void moveToTrash(const QList<QUrl> &urls);
     void copyToDownloads(const QList<QUrl> &urls);
     void refreshTrash();
@@ -40,6 +43,7 @@ private:
     QString m_trashFilesPath;
     QString m_downloadsPath;
     QFileSystemWatcher m_watcher;
+    std::function<void()> m_launchpadCallback;
     bool m_isTrashFull = false;
     int m_trashItemCount = 0;
 };

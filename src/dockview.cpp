@@ -4,6 +4,7 @@
 */
 
 #include "dockview.h"
+#include "dockcorona.h"
 
 #include <QGuiApplication>
 #include <QScreen>
@@ -29,6 +30,11 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
     setColor(Qt::transparent);
 
     m_backend = new DockBackend(this);
+    m_backend->setLaunchpadCallback([this]() {
+        if (auto c = qobject_cast<DockCorona *>(m_corona)) {
+            c->toggleLaunchpad();
+        }
+    });
     rootContext()->setContextProperty(QStringLiteral("dockBackend"), m_backend);
 
     if (auto screen = QGuiApplication::primaryScreen()) {

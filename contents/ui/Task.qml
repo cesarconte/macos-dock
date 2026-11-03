@@ -52,6 +52,8 @@ PlasmaCore.ToolTipArea {
     readonly property bool isPinned: Boolean(model.IsLauncher || (model.LauncherUrlWithoutIcon && tasksRoot && tasksRoot.hasLauncher(model.LauncherUrlWithoutIcon)))
     readonly property bool isDividerTask: false
     readonly property int dividerOffset: 0
+    readonly property bool isLaunchpad: Boolean((model.LauncherUrlWithoutIcon && String(model.LauncherUrlWithoutIcon).indexOf("launchpad") !== -1)
+        || (model.AppId && String(model.AppId).indexOf("launchpad") !== -1))
 
     z: inPopup ? 0 : Math.round(effectiveZoom * 100)
 
@@ -608,7 +610,15 @@ PlasmaCore.ToolTipArea {
         TapHandler {
             acceptedButtons: Qt.LeftButton
             enabled: !task.inPopup
-            onTapped: (eventPoint, button) => leftTapHandler.leftClick()
+            onTapped: (eventPoint, button) => {
+                if (task.isLaunchpad) {
+                    if (typeof dockBackend !== "undefined") {
+                        dockBackend.toggleLaunchpad();
+                    }
+                    return;
+                }
+                leftTapHandler.leftClick();
+            }
         }
 
         TapHandler {
@@ -643,6 +653,12 @@ PlasmaCore.ToolTipArea {
         function leftClick(): void {
             if (task.active) {
                 task.hideToolTip();
+            }
+            if (task.isLaunchpad) {
+                if (typeof dockBackend !== "undefined") {
+                    dockBackend.toggleLaunchpad();
+                }
+                return;
             }
             TaskTools.activateTask(modelIndex(), model, point.modifiers, task, Plasmoid, tasksRoot, effectWatcher.registered);
         }

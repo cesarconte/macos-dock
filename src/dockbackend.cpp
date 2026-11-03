@@ -104,6 +104,18 @@ void DockBackend::moveToTrash(const QList<QUrl> &urls)
     }
 }
 
+void DockBackend::setLaunchpadCallback(std::function<void()> cb)
+{
+    m_launchpadCallback = std::move(cb);
+}
+
+void DockBackend::toggleLaunchpad()
+{
+    if (m_launchpadCallback) {
+        m_launchpadCallback();
+    }
+}
+
 void DockBackend::copyToDownloads(const QList<QUrl> &urls)
 {
     for (const auto &url : urls) {

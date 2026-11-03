@@ -9,6 +9,9 @@
 #include <memory>
 
 class DockView;
+namespace Plasma {
+class Applet;
+}
 
 class DockCorona : public Plasma::Corona
 {
@@ -23,7 +26,11 @@ public:
     void init();
     void showConfigurationInterface();
 
+public Q_SLOTS:
+    void toggleLaunchpad();
+
 private:
     Plasma::Containment *m_containment = nullptr;
     std::unique_ptr<DockView> m_view;
+    Plasma::Applet *m_drawerApplet = nullptr;
 };

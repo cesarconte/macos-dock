@@ -9,9 +9,11 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QDebug>
+#include <QDBusConnection>
 
 #include <KPackage/PackageLoader>
 #include <Plasma/PluginLoader>
+#include <plasmaquick/appletquickitem.h>
 
 DockCorona::DockCorona(QObject *parent)
     : Plasma::Corona(parent)
@@ -135,8 +137,50 @@ void DockCorona::init()
 
         m_view->setApplet(appletPtr);
         m_view->show();
+
+        // Load or find Plasma Drawer applet in the dock containment
+        for (Plasma::Applet *a : m_containment->applets()) {
+            if (a->pluginMetaData().pluginId() == QStringLiteral("p-connor.plasma-drawer")) {
+                m_drawerApplet = a;
+                break;
+            }
+        }
+
+        if (!m_drawerApplet) {
+            auto a = Plasma::PluginLoader::self()->loadApplet(QStringLiteral("p-connor.plasma-drawer"), 0, {});
+            if (a) {
+                m_drawerApplet = a.get();
+                a->setParent(this);
+                m_containment->addApplet(std::move(a));
+                saveLayout(QStringLiteral("macosdockrc"));
+            }
+        }
+
+        if (m_drawerApplet) {
+            auto drawerItem = PlasmaQuick::AppletQuickItem::itemForApplet(m_drawerApplet);
+            if (drawerItem) {
+                drawerItem->setParentItem(m_view->contentItem());
+                drawerItem->setVisible(false);
+                drawerItem->setSize(QSizeF(0, 0));
+                drawerItem->compactRepresentationItem();
+                drawerItem->fullRepresentationItem();
+            }
+        }
+
+        QDBusConnection::sessionBus().registerService(QStringLiteral("com.cesar.macosdock"));
+        QDBusConnection::sessionBus().registerObject(QStringLiteral("/Dock"), this, QDBusConnection::ExportAllSlots);
     } else {
         qWarning() << "Failed to load applet com.cesar.macosdock";
+    }
+}
+
+void DockCorona::toggleLaunchpad()
+{
+    if (m_drawerApplet) {
+        Q_EMIT m_drawerApplet->activated();
+        if (auto item = PlasmaQuick::AppletQuickItem::itemForApplet(m_drawerApplet)) {
+            item->setExpanded(!item->isExpanded());
+        }
     }
 }
 
