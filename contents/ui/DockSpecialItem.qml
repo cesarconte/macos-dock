@@ -65,10 +65,11 @@ PlasmaCore.ToolTipArea {
         acceptedButtons: Qt.LeftButton
         onTapped: {
             triggerBounce();
-            if (specialItem.isTrash && typeof dockBackend !== "undefined") {
-                dockBackend.openTrash();
-            } else if (specialItem.isDownloads && typeof dockBackend !== "undefined") {
-                dockBackend.openDownloads();
+            var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
+            if (specialItem.isTrash && backend) {
+                backend.openTrash();
+            } else if (specialItem.isDownloads && backend) {
+                backend.openDownloads();
             }
         }
     }
@@ -85,11 +86,12 @@ PlasmaCore.ToolTipArea {
     DropArea {
         anchors.fill: parent
         onDropped: drop => {
-            if (drop.hasUrls && typeof dockBackend !== "undefined") {
+            var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
+            if (drop.hasUrls && backend) {
                 if (specialItem.isTrash) {
-                    dockBackend.moveToTrash(drop.urls);
+                    backend.moveToTrash(drop.urls);
                 } else if (specialItem.isDownloads) {
-                    dockBackend.copyToDownloads(drop.urls);
+                    backend.copyToDownloads(drop.urls);
                 }
                 drop.acceptProposedAction();
             }
@@ -173,8 +175,9 @@ PlasmaCore.ToolTipArea {
             text: i18n("Abrir papelera")
             icon.name: "document-open"
             onTriggered: {
-                if (typeof dockBackend !== "undefined") {
-                    dockBackend.openTrash();
+                var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
+                if (backend) {
+                    backend.openTrash();
                 }
             }
         }
@@ -182,10 +185,11 @@ PlasmaCore.ToolTipArea {
         PlasmaComponents3.MenuItem {
             text: i18n("Vaciar papelera")
             icon.name: "trash-empty"
-            enabled: typeof dockBackend !== "undefined" && dockBackend.isTrashFull
+            enabled: Boolean((typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.isTrashFull : (typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend ? tasksRoot.dockBackend.isTrashFull : false))
             onTriggered: {
-                if (typeof dockBackend !== "undefined") {
-                    dockBackend.emptyTrash();
+                var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
+                if (backend) {
+                    backend.emptyTrash();
                 }
             }
         }

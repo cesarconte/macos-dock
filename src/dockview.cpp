@@ -71,6 +71,11 @@ void DockView::setApplet(Plasma::Applet *applet)
         return;
     }
 
+    if (auto engine = qmlEngine(m_appletInterface)) {
+        engine->rootContext()->setContextProperty(QStringLiteral("dockBackend"), m_backend);
+    }
+    m_appletInterface->setProperty("dockBackend", QVariant::fromValue(static_cast<QObject *>(m_backend)));
+
     m_appletInterface->setParentItem(contentItem());
     m_appletInterface->setX(0);
     m_appletInterface->setY(0);

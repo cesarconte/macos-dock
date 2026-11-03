@@ -612,10 +612,11 @@ PlasmaCore.ToolTipArea {
             enabled: !task.inPopup
             onTapped: (eventPoint, button) => {
                 if (task.isLaunchpad) {
-                    if (typeof dockBackend !== "undefined") {
-                        dockBackend.toggleLaunchpad();
+                    var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
+                    if (backend) {
+                        backend.toggleLaunchpad();
+                        return;
                     }
-                    return;
                 }
                 leftTapHandler.leftClick();
             }
@@ -655,10 +656,11 @@ PlasmaCore.ToolTipArea {
                 task.hideToolTip();
             }
             if (task.isLaunchpad) {
-                if (typeof dockBackend !== "undefined") {
-                    dockBackend.toggleLaunchpad();
+                var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
+                if (backend) {
+                    backend.toggleLaunchpad();
+                    return;
                 }
-                return;
             }
             TaskTools.activateTask(modelIndex(), model, point.modifiers, task, Plasmoid, tasksRoot, effectWatcher.registered);
         }
