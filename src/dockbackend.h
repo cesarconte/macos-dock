@@ -18,6 +18,7 @@ class DockBackend : public QObject
     Q_PROPERTY(int trashItemCount READ trashItemCount NOTIFY trashChanged)
 
 public:
+    static DockBackend *instance();
     explicit DockBackend(QObject *parent = nullptr);
     ~DockBackend() override = default;
 

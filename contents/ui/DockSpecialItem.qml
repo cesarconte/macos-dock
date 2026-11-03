@@ -10,6 +10,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents3
+import org.cesar.dock 1.0
 
 PlasmaCore.ToolTipArea {
     id: specialItem
@@ -20,8 +21,6 @@ PlasmaCore.ToolTipArea {
     required property string title
     property bool isTrash: false
     property bool isDownloads: false
-
-    readonly property var backend: tasksRoot ? tasksRoot.dockBackend : ((typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : null)
 
     mainText: title
     location: tasksRoot ? tasksRoot.effectiveLocation : PlasmaCore.Types.BottomEdge
@@ -67,10 +66,10 @@ PlasmaCore.ToolTipArea {
         acceptedButtons: Qt.LeftButton
         onTapped: {
             triggerBounce();
-            if (specialItem.isTrash && specialItem.backend) {
-                specialItem.backend.openTrash();
-            } else if (specialItem.isDownloads && specialItem.backend) {
-                specialItem.backend.openDownloads();
+            if (specialItem.isTrash) {
+                DockBackend.openTrash();
+            } else if (specialItem.isDownloads) {
+                DockBackend.openDownloads();
             }
         }
     }
@@ -86,13 +85,18 @@ PlasmaCore.ToolTipArea {
 
     DropArea {
         anchors.fill: parent
+        onEntered: drop => {
+            if (drop.hasUrls) {
+                drop.acceptProposedAction();
+            }
+        }
         onDropped: drop => {
-            if (drop.hasUrls && specialItem.backend) {
+            if (drop.hasUrls) {
                 specialItem.triggerBounce();
                 if (specialItem.isTrash) {
-                    specialItem.backend.moveToTrash(drop.urls);
+                    DockBackend.moveToTrash(drop.urls);
                 } else if (specialItem.isDownloads) {
-                    specialItem.backend.copyToDownloads(drop.urls);
+                    DockBackend.copyToDownloads(drop.urls);
                 }
                 drop.acceptProposedAction();
             }
@@ -176,20 +180,16 @@ PlasmaCore.ToolTipArea {
             text: i18n("Abrir papelera")
             icon.name: "document-open"
             onTriggered: {
-                if (specialItem.backend) {
-                    specialItem.backend.openTrash();
-                }
+                DockBackend.openTrash();
             }
         }
 
         PlasmaComponents3.MenuItem {
             text: i18n("Vaciar papelera")
             icon.name: "trash-empty"
-            enabled: Boolean(specialItem.backend && specialItem.backend.isTrashFull)
+            enabled: DockBackend.isTrashFull
             onTriggered: {
-                if (specialItem.backend) {
-                    specialItem.backend.emptyTrash();
-                }
+                DockBackend.emptyTrash();
             }
         }
     }

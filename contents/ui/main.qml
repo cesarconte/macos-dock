@@ -21,6 +21,7 @@ import org.kde.taskmanager as TaskManager
 import "code/LayoutMetrics.js" as LayoutMetrics
 import "code/TaskTools.js" as TaskTools
 import org.kde.plasma.workspace.dbus as DBus
+import org.cesar.dock 1.0
 
 PlasmoidItem {
     id: tasks
@@ -919,10 +920,10 @@ PlasmoidItem {
                     DockSpecialItem {
                         itemIndex: taskRepeater.count + 1
                         tasksRoot: tasks
-                        title: (tasks.dockBackend && tasks.dockBackend.isTrashFull)
-                            ? i18n("Papelera (%1 elementos)", tasks.dockBackend.trashItemCount)
+                        title: DockBackend.isTrashFull
+                            ? i18n("Papelera (%1 elementos)", DockBackend.trashItemCount)
                             : i18n("Papelera")
-                        iconSource: (tasks.dockBackend && tasks.dockBackend.isTrashFull)
+                        iconSource: DockBackend.isTrashFull
                             ? "user-trash-full"
                             : "user-trash"
                         isTrash: true

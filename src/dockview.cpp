@@ -29,7 +29,7 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
 {
     setColor(Qt::transparent);
 
-    m_backend = new DockBackend(this);
+    m_backend = DockBackend::instance();
     m_backend->setLaunchpadCallback([this]() {
         if (auto c = qobject_cast<DockCorona *>(m_corona)) {
             c->toggleLaunchpad();

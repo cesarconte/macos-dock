@@ -15,10 +15,24 @@
 
 #include <KIO/CopyJob>
 #include <KIO/EmptyTrashJob>
+#include <KIO/OpenUrlJob>
+#include <KIO/ApplicationLauncherJob>
+#include <KService>
+
+static DockBackend *s_instance = nullptr;
+
+DockBackend *DockBackend::instance()
+{
+    if (!s_instance) {
+        s_instance = new DockBackend();
+    }
+    return s_instance;
+}
 
 DockBackend::DockBackend(QObject *parent)
     : QObject(parent)
 {
+    s_instance = this;
     m_trashFilesPath = QDir::homePath() + QStringLiteral("/.local/share/Trash/files");
     const QString trashInfoPath = QDir::homePath() + QStringLiteral("/.local/share/Trash/info");
     const QString trashRootPath = QDir::homePath() + QStringLiteral("/.local/share/Trash");
@@ -72,17 +86,24 @@ void DockBackend::refreshTrash()
 
 void DockBackend::openTrash()
 {
+    qDebug() << "DockBackend::openTrash() CALLED";
+    auto service = KService::serviceByDesktopName(QStringLiteral("org.kde.dolphin"));
+    if (service) {
+        auto *job = new KIO::ApplicationLauncherJob(service);
+        job->setUrls({QUrl(QStringLiteral("trash:/"))});
+        job->start();
+        return;
+    }
     if (QProcess::startDetached(QStringLiteral("dolphin"), {QStringLiteral("trash:/")})) {
         return;
     }
-    if (QProcess::startDetached(QStringLiteral("kioclient"), {QStringLiteral("exec"), QStringLiteral("trash:/")})) {
-        return;
-    }
-    QDesktopServices::openUrl(QUrl(QStringLiteral("trash:/")));
+    auto *job = new KIO::OpenUrlJob(QUrl(QStringLiteral("trash:/")));
+    job->start();
 }
 
 void DockBackend::emptyTrash()
 {
+    qDebug() << "DockBackend::emptyTrash() CALLED";
     auto *job = KIO::emptyTrash();
     connect(job, &KJob::result, this, [this](KJob *job) {
         if (!job->error()) {
@@ -93,17 +114,32 @@ void DockBackend::emptyTrash()
             if (QFile::exists(soundPath)) {
                 QProcess::startDetached(QStringLiteral("pw-play"), {soundPath});
             }
+        } else {
+            qWarning() << "KIO::emptyTrash error:" << job->errorString();
         }
     });
 }
 
 void DockBackend::openDownloads()
 {
-    QDesktopServices::openUrl(QUrl::fromLocalFile(m_downloadsPath));
+    qDebug() << "DockBackend::openDownloads() CALLED";
+    auto service = KService::serviceByDesktopName(QStringLiteral("org.kde.dolphin"));
+    if (service) {
+        auto *job = new KIO::ApplicationLauncherJob(service);
+        job->setUrls({QUrl::fromLocalFile(m_downloadsPath)});
+        job->start();
+        return;
+    }
+    if (QProcess::startDetached(QStringLiteral("dolphin"), {m_downloadsPath})) {
+        return;
+    }
+    auto *job = new KIO::OpenUrlJob(QUrl::fromLocalFile(m_downloadsPath));
+    job->start();
 }
 
 void DockBackend::moveToTrash(const QList<QUrl> &urls)
 {
+    qDebug() << "DockBackend::moveToTrash() CALLED with" << urls;
     if (urls.isEmpty()) {
         return;
     }
@@ -111,6 +147,8 @@ void DockBackend::moveToTrash(const QList<QUrl> &urls)
     connect(job, &KJob::result, this, [this](KJob *job) {
         if (!job->error()) {
             checkTrash();
+        } else {
+            qWarning() << "KIO::trash error:" << job->errorString();
         }
     });
 }
@@ -129,6 +167,7 @@ void DockBackend::toggleLaunchpad()
 
 void DockBackend::copyToDownloads(const QList<QUrl> &urls)
 {
+    qDebug() << "DockBackend::copyToDownloads() CALLED with" << urls;
     for (const auto &url : urls) {
         if (!url.isLocalFile()) {
             continue;

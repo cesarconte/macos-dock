@@ -14,7 +14,9 @@
 #include <KDBusService>
 #include <KLocalizedString>
 #include <KSignalHandler>
+#include <QtQml/qqml.h>
 
+#include "dockbackend.h"
 #include "dockcorona.h"
 
 using namespace Qt::Literals;
@@ -33,6 +35,8 @@ int main(int argc, char **argv)
     qputenv("QT_WAYLAND_DISABLE_FIXED_POSITIONS", "1");
 
     QApplication app(argc, argv);
+
+    qmlRegisterSingletonInstance<DockBackend>("org.cesar.dock", 1, 0, "DockBackend", DockBackend::instance());
 
     app.setApplicationVersion(QStringLiteral("1.0.0"));
     app.setOrganizationDomain(QStringLiteral("cesar.org"));

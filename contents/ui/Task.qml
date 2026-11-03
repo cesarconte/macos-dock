@@ -19,6 +19,7 @@ import "code/LayoutMetrics.js" as LayoutMetrics
 import "code/TaskTools.js" as TaskTools
 import org.kde.plasma.plasmoid
 import org.kde.taskmanager as TaskManager
+import org.cesar.dock 1.0
 
 PlasmaCore.ToolTipArea {
     id: task
@@ -612,11 +613,8 @@ PlasmaCore.ToolTipArea {
             enabled: !task.inPopup
             onTapped: (eventPoint, button) => {
                 if (task.isLaunchpad) {
-                    var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
-                    if (backend) {
-                        backend.toggleLaunchpad();
-                        return;
-                    }
+                    DockBackend.toggleLaunchpad();
+                    return;
                 }
                 leftTapHandler.leftClick();
             }
@@ -656,11 +654,8 @@ PlasmaCore.ToolTipArea {
                 task.hideToolTip();
             }
             if (task.isLaunchpad) {
-                var backend = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : ((typeof tasksRoot !== "undefined" && tasksRoot && tasksRoot.dockBackend) ? tasksRoot.dockBackend : null);
-                if (backend) {
-                    backend.toggleLaunchpad();
-                    return;
-                }
+                DockBackend.toggleLaunchpad();
+                return;
             }
             TaskTools.activateTask(modelIndex(), model, point.modifiers, task, Plasmoid, tasksRoot, effectWatcher.registered);
         }
