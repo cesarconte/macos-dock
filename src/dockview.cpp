@@ -59,6 +59,9 @@ void DockView::setApplet(Plasma::Applet *applet)
     }
 
     m_appletInterface->setParentItem(contentItem());
+    m_appletInterface->setX(0);
+    m_appletInterface->setY(0);
+    m_appletInterface->setProperty("isStandaloneView", true);
     m_appletInterface->setVisible(true);
     m_appletInterface->setProperty("hideOnWindowDeactivate", false);
 
@@ -112,6 +115,8 @@ void DockView::resizeEvent(QResizeEvent *event)
 {
     QQuickView::resizeEvent(event);
     if (m_appletInterface) {
+        m_appletInterface->setX(0);
+        m_appletInterface->setY(0);
         m_appletInterface->setSize(event->size());
     }
     updateMask();
@@ -138,6 +143,8 @@ void DockView::updateScreenGeometry()
     }
 
     if (m_appletInterface) {
+        m_appletInterface->setX(0);
+        m_appletInterface->setY(0);
         m_appletInterface->setSize(QSizeF(geom.width(), m_dockCanvasHeight));
     }
 

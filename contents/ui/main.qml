@@ -84,6 +84,8 @@ PlasmoidItem {
 
     property alias taskList: taskList
 
+    property bool isStandaloneView: false
+
     readonly property real dockCapsuleWidth: tmf ? tmf.width : tasks.width
     readonly property real dockCapsuleX: tmf ? tmf.x : 0
     readonly property real dockCapsuleHeight: tmf ? tmf.height : tasks.height
@@ -334,8 +336,8 @@ PlasmoidItem {
         return vertical ? Math.min(screenAvailableLength, tasksLength + verticalPadding * 2 + maxExtraSpan) : targetThickness;
     }
 
-    width: (vertical && parent) ? parent.width : dockWidth
-    height: (!vertical && parent) ? parent.height : dockHeight
+    width: isStandaloneView ? (parent ? parent.width : dockWidth) : ((vertical && parent) ? parent.width : dockWidth)
+    height: isStandaloneView ? (parent ? parent.height : dockHeight) : ((!vertical && parent) ? parent.height : dockHeight)
     implicitWidth: dockWidth
     implicitHeight: dockHeight
 
