@@ -88,9 +88,9 @@ void DockCorona::init()
             QStringLiteral("preferred://browser"),
             QStringLiteral("applications:org.kde.kdeconnect.sms.desktop"),
             QStringLiteral("applications:proton-mail.desktop"),
-            QStringLiteral("applications:google-maps-geo-handler.desktop"),
+            QStringLiteral("applications:brave-mnhkaebcjjhencmpkapnbdaogjamfbcj-Default.desktop"),
             QStringLiteral("applications:org.kde.gwenview.desktop"),
-            QStringLiteral("applications:org.kde.kdeconnect.app.desktop"),
+            QStringLiteral("applications:brave-hnpfjngllnobngcgfapefoaidbinmjnm-Default.desktop"),
             QStringLiteral("applications:org.kde.korganizer.desktop"),
             QStringLiteral("applications:org.cesar.kquicknote.desktop"),
             QStringLiteral("applications:org.cesar.kvoicememos.desktop"),
@@ -102,7 +102,7 @@ void DockCorona::init()
         };
 
         const QStringList currentLaunchers = generalConfig.readEntry("launchers", QStringList{});
-        if (currentLaunchers.size() < defaultLaunchers.size()) {
+        if (currentLaunchers.isEmpty()) {
             generalConfig.writeEntry("launchers", defaultLaunchers);
             generalConfig.writeEntry("elevation", 12);
             generalConfig.writeEntry("hoverElevation", 8);
@@ -122,6 +122,15 @@ void DockCorona::init()
             appletConfig.writeEntry("zoomMultiplier", 1.5);
             appletConfig.writeEntry("containerBackgroundType", 4);
             appletConfig.sync();
+        }
+
+        connect(appletPtr, &Plasma::Applet::configNeedsSaving, this, [this]() {
+            saveLayout(QStringLiteral("macosdockrc"));
+        });
+        if (m_containment) {
+            connect(m_containment, &Plasma::Applet::configNeedsSaving, this, [this]() {
+                saveLayout(QStringLiteral("macosdockrc"));
+            });
         }
 
         m_view->setApplet(appletPtr);

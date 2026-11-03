@@ -41,7 +41,8 @@ DropArea {
         if (isGroupDialog) {
             above = target.itemAt(event.x, event.y);
         } else {
-            above = target.childAt(event.x, event.y);
+            const mapped = target ? dropArea.mapToItem(target, event.x, event.y) : Qt.point(event.x, event.y);
+            above = target ? target.childAt(mapped.x, mapped.y) : null;
         }
 
         if (!above) {
@@ -177,7 +178,8 @@ DropArea {
                 rotation += 15;
                 increment--;
             }
-            const anchor = dropArea.target.childAt(event.x, event.y);
+            const wheelMapped = dropArea.target ? dropArea.mapToItem(dropArea.target, event.x, event.y) : Qt.point(event.x, event.y);
+            const anchor = dropArea.target ? dropArea.target.childAt(wheelMapped.x, wheelMapped.y) : null;
             if (Plasmoid.configuration.wheelEnabled === 3) {
                 const loudest = anchor?.audioStreams?.reduce((loudest, stream) => Math.max(loudest, stream.volume), 0)
                 const step = (pulseAudio.item.normalVolume - pulseAudio.item.minimalVolume) * pulseAudio.item.globalConfig.volumeStep / 100;

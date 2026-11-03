@@ -737,6 +737,7 @@ PlasmaCore.ToolTipArea {
                     setRequestedInhibitDnd(false);
                     dragHelper.Drag.active = false;
                     dragHelper.Drag.imageSource = "";
+                    tasksRoot.dragSource = null;
                 }
             }
         }
