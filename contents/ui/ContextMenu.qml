@@ -14,6 +14,7 @@ import org.kde.plasma.extras as PlasmaExtras
 
 import org.kde.taskmanager as TaskManager
 import org.kde.plasma.private.mpris as Mpris
+import org.cesar.dock 1.0
 import "code/LayoutMetrics.js" as LayoutMetrics
 
 PlasmaExtras.Menu {
@@ -22,6 +23,12 @@ PlasmaExtras.Menu {
     required property var backend
     required property Mpris.Mpris2Model mpris2Source
     required property /*QModelIndex*/var modelIndex
+
+    readonly property bool isDolphin: {
+        const appId = String(visualParent ? visualParent.appId : "").toLowerCase();
+        const lUrl = String(get(TaskManager.AbstractTasksModel.LauncherUrlWithoutIcon) || "").toLowerCase();
+        return appId.includes("dolphin") || lUrl.includes("dolphin");
+    }
 
     readonly property var atm: TaskManager.AbstractTasksModel
 
@@ -96,6 +103,110 @@ PlasmaExtras.Menu {
     }
 
     function loadDynamicLaunchActions(launcherUrl: url): void {
+        if (isDolphin) {
+            // 1. Ventanas abiertas de Finder / Dolphin (si existen)
+            let hasWindows = false;
+            if (visualParent && visualParent.childCount > 0) {
+                for (let i = 0; i < visualParent.childCount; ++i) {
+                    const childIdx = tasksModel.makeModelIndex(visualParent.index, i);
+                    const winTitle = tasksModel.data(childIdx, TaskManager.AbstractTasksModel.display);
+                    const isActive = tasksModel.data(childIdx, TaskManager.AbstractTasksModel.IsActive);
+                    let winItem = newMenuItem(menu);
+                    winItem.text = winTitle;
+                    winItem.icon = "window";
+                    if (isActive) {
+                        winItem.checkable = true;
+                        winItem.checked = true;
+                    }
+                    winItem.clicked.connect(() => {
+                        tasksModel.requestActivate(childIdx);
+                    });
+                    menu.addMenuItem(winItem, startNewInstanceItem);
+                    hasWindows = true;
+                }
+            } else if (visualParent && menu.get(TaskManager.AbstractTasksModel.IsWindow)) {
+                let winItem = newMenuItem(menu);
+                winItem.text = menu.get(TaskManager.AbstractTasksModel.display);
+                winItem.icon = "window";
+                winItem.checkable = true;
+                winItem.checked = menu.get(TaskManager.AbstractTasksModel.IsActive);
+                winItem.clicked.connect(() => {
+                    tasksModel.requestActivate(menu.modelIndex);
+                });
+                menu.addMenuItem(winItem, startNewInstanceItem);
+                hasWindows = true;
+            }
+
+            if (hasWindows) {
+                menu.addMenuItem(newSeparator(menu), startNewInstanceItem);
+            }
+
+            // 2. Nueva ventana del Finder
+            let newWinItem = newMenuItem(menu);
+            newWinItem.text = i18n("Nueva ventana del Finder");
+            newWinItem.icon = "window-new";
+            newWinItem.clicked.connect(() => {
+                DockBackend.openNewDolphinWindow("");
+            });
+            menu.addMenuItem(newWinItem, startNewInstanceItem);
+            menu.addMenuItem(newSeparator(menu), startNewInstanceItem);
+
+            // 3. Lugares de macOS / Ubicaciones
+            let placesHeader = newMenuItem(menu);
+            placesHeader.text = i18n("Ubicaciones");
+            placesHeader.section = true;
+            menu.addMenuItem(placesHeader, startNewInstanceItem);
+
+            const places = DockBackend.finderPlaces();
+            for (let i = 0; i < places.length; ++i) {
+                const place = places[i];
+                let placeItem = newMenuItem(menu);
+                placeItem.text = place.title;
+                placeItem.icon = place.icon;
+                const placePath = place.path;
+                placeItem.clicked.connect(() => {
+                    DockBackend.openFolder(placePath);
+                });
+                menu.addMenuItem(placeItem, startNewInstanceItem);
+            }
+            menu.addMenuItem(newSeparator(menu), startNewInstanceItem);
+
+            // 4. Forzar reinicio de Dolphin (Relaunch)
+            let relaunchItem = newMenuItem(menu);
+            relaunchItem.text = i18n("Forzar reinicio");
+            relaunchItem.icon = "view-refresh";
+            relaunchItem.clicked.connect(() => {
+                DockBackend.relaunchDolphin();
+            });
+            menu.addMenuItem(relaunchItem, startNewInstanceItem);
+            menu.addMenuItem(newSeparator(menu), startNewInstanceItem);
+
+            return;
+        }
+
+        // Acciones dinámicas de Jump List para otras aplicaciones
+        const launcherUrlStr = String(launcherUrl || "");
+        const actions = DockBackend.jumpListActions(launcherUrlStr);
+        if (actions.length > 0) {
+            let actHeader = newMenuItem(menu);
+            actHeader.text = i18n("Acciones");
+            actHeader.section = true;
+            menu.addMenuItem(actHeader, startNewInstanceItem);
+
+            for (let i = 0; i < actions.length; ++i) {
+                const act = actions[i];
+                let actItem = newMenuItem(menu);
+                actItem.text = act.text;
+                actItem.icon = act.icon || "system-run";
+                const actionName = act.name;
+                actItem.clicked.connect(() => {
+                    DockBackend.executeServiceAction(launcherUrlStr, actionName);
+                });
+                menu.addMenuItem(actItem, startNewInstanceItem);
+            }
+            menu.addMenuItem(newSeparator(menu), startNewInstanceItem);
+        }
+
         let sections = [];
 
         const placesActions = backend.placesActions(launcherUrl, showAllPlaces, menu);
@@ -278,8 +389,8 @@ PlasmaExtras.Menu {
 
     PlasmaExtras.MenuItem {
         id: startNewInstanceItem
-        visible: menu.get(TaskManager.AbstractTasksModel.CanLaunchNewInstance)
-        text: i18nc("action:inmenu", "Open New Window")
+        visible: !isDolphin && menu.get(TaskManager.AbstractTasksModel.CanLaunchNewInstance)
+        text: i18n("Abrir nueva ventana")
         icon: "window-new"
 
         onClicked: tasksModel.requestNewInstance(menu.modelIndex)
@@ -498,7 +609,7 @@ PlasmaExtras.Menu {
 
         enabled: menu.visualParent && menu.get(TaskManager.AbstractTasksModel.LauncherUrlWithoutIcon).toString() !== ""
 
-        text: i18nc("action:inmenu", "&Pin to Task Manager")
+        text: i18n("Fijar en el Dock")
         icon: "window-pin"
 
         function doesBelongToCurrentActivity(): bool {
@@ -514,7 +625,7 @@ PlasmaExtras.Menu {
     PlasmaExtras.MenuItem {
         id: showLauncherInActivitiesItem
 
-        text: i18nc("action:inmenu", "&Pin to Task Manager")
+        text: i18n("Fijar en el Dock")
         icon: "window-pin"
 
         visible: menu.visualParent
@@ -596,7 +707,7 @@ PlasmaExtras.Menu {
                 && !launcherToggleAction.visible
                 && activityInfo.numberOfRunningActivities < 2)
 
-        text: i18nc("action:inmenu", "Unpin from Task Manager")
+        text: i18n("Desanclar del Dock")
         icon: "window-unpin"
 
         onClicked: {
@@ -771,7 +882,7 @@ PlasmaExtras.Menu {
 
     PlasmaExtras.MenuItem {
         id: closeWindowItem
-        visible: (menu.visualParent && !menu.get(TaskManager.AbstractTasksModel.IsLauncher) && !menu.get(TaskManager.AbstractTasksModel.IsStartup))
+        visible: !isDolphin && (menu.visualParent && !menu.get(TaskManager.AbstractTasksModel.IsLauncher) && !menu.get(TaskManager.AbstractTasksModel.IsStartup))
 
         enabled: menu.visualParent && menu.get(TaskManager.AbstractTasksModel.IsClosable)
 

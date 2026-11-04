@@ -336,3 +336,135 @@ void DockBackend::copyToDownloads(const QList<QUrl> &urls)
         QFile::copy(srcPath, destPath);
     }
 }
+
+QVariantList DockBackend::finderPlaces() const
+{
+    QVariantList list;
+
+    auto addPlace = [&list](const QString &title, const QString &path, const QString &icon) {
+        if (!path.isEmpty()) {
+            QVariantMap m;
+            m.insert(QStringLiteral("title"), title);
+            m.insert(QStringLiteral("path"), path);
+            m.insert(QStringLiteral("icon"), icon);
+            list.append(m);
+        }
+    };
+
+    addPlace(tr("Carpeta personal"), QDir::homePath(), QStringLiteral("user-home"));
+    addPlace(tr("Descargas"), QStandardPaths::writableLocation(QStandardPaths::DownloadLocation), QStringLiteral("folder-download"));
+    addPlace(tr("Documentos"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation), QStringLiteral("folder-documents"));
+    addPlace(tr("Escritorio"), QStandardPaths::writableLocation(QStandardPaths::DesktopLocation), QStringLiteral("user-desktop"));
+    addPlace(tr("Imágenes"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), QStringLiteral("folder-pictures"));
+    addPlace(tr("Música"), QStandardPaths::writableLocation(QStandardPaths::MusicLocation), QStringLiteral("folder-music"));
+    addPlace(tr("Vídeos"), QStandardPaths::writableLocation(QStandardPaths::MoviesLocation), QStringLiteral("folder-videos"));
+    addPlace(tr("Papelera"), QStringLiteral("trash:/"), QStringLiteral("user-trash"));
+    addPlace(tr("Red"), QStringLiteral("remote:/"), QStringLiteral("network-workgroup"));
+
+    return list;
+}
+
+void DockBackend::openFolder(const QString &path)
+{
+    qDebug() << "DockBackend::openFolder() CALLED with" << path;
+    if (path.isEmpty()) {
+        return;
+    }
+    if (QProcess::startDetached(QStringLiteral("dolphin"), {path})) {
+        return;
+    }
+    QDesktopServices::openUrl(path.contains(QLatin1String(":/")) ? QUrl(path) : QUrl::fromLocalFile(path));
+}
+
+void DockBackend::openNewDolphinWindow(const QString &path)
+{
+    qDebug() << "DockBackend::openNewDolphinWindow() CALLED with" << path;
+    const QString target = path.isEmpty() ? QDir::homePath() : path;
+    if (QProcess::startDetached(QStringLiteral("dolphin"), {QStringLiteral("--new-window"), target})) {
+        return;
+    }
+    openFolder(target);
+}
+
+void DockBackend::relaunchDolphin()
+{
+    qDebug() << "DockBackend::relaunchDolphin() CALLED";
+    QProcess::execute(QStringLiteral("killall"), {QStringLiteral("dolphin")});
+    QTimer::singleShot(250, []() {
+        QProcess::startDetached(QStringLiteral("dolphin"), {});
+    });
+}
+
+QVariantList DockBackend::jumpListActions(const QString &launcherUrl) const
+{
+    QVariantList list;
+    if (launcherUrl.isEmpty()) {
+        return list;
+    }
+
+    QString id = launcherUrl;
+    if (id.startsWith(QLatin1String("applications:"))) {
+        id.remove(0, 13);
+    } else if (id.startsWith(QLatin1String("application://"))) {
+        id.remove(0, 14);
+    } else if (id.startsWith(QLatin1String("file://"))) {
+        id.remove(0, 7);
+    }
+
+    KService::Ptr service = KService::serviceByStorageId(id);
+    if (!service && id.endsWith(QLatin1String(".desktop"))) {
+        service = KService::serviceByDesktopName(id.left(id.length() - 8));
+    }
+    if (!service) {
+        service = KService::serviceByDesktopName(id);
+    }
+
+    if (service) {
+        const auto actions = service->actions();
+        for (const auto &act : actions) {
+            if (!act.noDisplay()) {
+                QVariantMap m;
+                m.insert(QStringLiteral("name"), act.name());
+                m.insert(QStringLiteral("text"), act.text());
+                m.insert(QStringLiteral("icon"), act.icon());
+                m.insert(QStringLiteral("exec"), act.exec());
+                list.append(m);
+            }
+        }
+    }
+
+    return list;
+}
+
+void DockBackend::executeServiceAction(const QString &launcherUrl, const QString &actionName)
+{
+    qDebug() << "DockBackend::executeServiceAction() CALLED with" << launcherUrl << actionName;
+    QString id = launcherUrl;
+    if (id.startsWith(QLatin1String("applications:"))) {
+        id.remove(0, 13);
+    } else if (id.startsWith(QLatin1String("application://"))) {
+        id.remove(0, 14);
+    } else if (id.startsWith(QLatin1String("file://"))) {
+        id.remove(0, 7);
+    }
+
+    KService::Ptr service = KService::serviceByStorageId(id);
+    if (!service && id.endsWith(QLatin1String(".desktop"))) {
+        service = KService::serviceByDesktopName(id.left(id.length() - 8));
+    }
+    if (!service) {
+        service = KService::serviceByDesktopName(id);
+    }
+
+    if (service) {
+        const auto actions = service->actions();
+        for (const auto &act : actions) {
+            if (act.name() == actionName) {
+                auto *job = new KIO::ApplicationLauncherJob(act);
+                job->setUiDelegate(KIO::createDefaultJobUiDelegate());
+                job->start();
+                return;
+            }
+        }
+    }
+}

@@ -39,6 +39,12 @@ public:
     Q_INVOKABLE bool progressVisible(const QString &appId, const QString &launcherUrl) const;
     Q_INVOKABLE bool demandsAttention(const QString &appId, const QString &launcherUrl) const;
     Q_INVOKABLE QString iconForUrl(const QUrl &url, bool isDir) const;
+    Q_INVOKABLE QVariantList finderPlaces() const;
+    Q_INVOKABLE void openFolder(const QString &path);
+    Q_INVOKABLE void openNewDolphinWindow(const QString &path = QString());
+    Q_INVOKABLE void relaunchDolphin();
+    Q_INVOKABLE QVariantList jumpListActions(const QString &launcherUrl) const;
+    Q_INVOKABLE void executeServiceAction(const QString &launcherUrl, const QString &actionName);
 
 public Q_SLOTS:
     void openTrash();
