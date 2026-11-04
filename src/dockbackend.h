@@ -11,12 +11,15 @@
 #include <QFileSystemWatcher>
 #include <functional>
 
+class DockIndicatorManager;
+
 class DockBackend : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool isTrashFull READ isTrashFull NOTIFY trashChanged)
     Q_PROPERTY(int trashItemCount READ trashItemCount NOTIFY trashChanged)
     Q_PROPERTY(QString downloadsPath READ downloadsPath CONSTANT)
+    Q_PROPERTY(int indicatorsVersion READ indicatorsVersion NOTIFY indicatorsChanged)
 
 public:
     static DockBackend *instance();
@@ -26,6 +29,15 @@ public:
     bool isTrashFull() const;
     int trashItemCount() const;
     QString downloadsPath() const;
+    int indicatorsVersion() const { return m_indicatorsVersion; }
+
+    DockIndicatorManager *indicatorManager() const { return m_indicatorManager; }
+
+    Q_INVOKABLE int badgeCount(const QString &appId, const QString &launcherUrl, const QString &title = QString()) const;
+    Q_INVOKABLE bool badgeVisible(const QString &appId, const QString &launcherUrl, const QString &title = QString()) const;
+    Q_INVOKABLE double progress(const QString &appId, const QString &launcherUrl) const;
+    Q_INVOKABLE bool progressVisible(const QString &appId, const QString &launcherUrl) const;
+    Q_INVOKABLE bool demandsAttention(const QString &appId, const QString &launcherUrl) const;
 
 public Q_SLOTS:
     void openTrash();
@@ -40,6 +52,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void trashChanged();
+    void indicatorsChanged();
 
 private:
     void checkTrash();
@@ -50,4 +63,7 @@ private:
     std::function<void()> m_launchpadCallback;
     bool m_isTrashFull = false;
     int m_trashItemCount = 0;
+
+    DockIndicatorManager *m_indicatorManager = nullptr;
+    int m_indicatorsVersion = 0;
 };

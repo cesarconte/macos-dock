@@ -4,6 +4,7 @@
 */
 
 #include "dockbackend.h"
+#include "dockindicatormanager.h"
 
 #include <QDesktopServices>
 #include <QDir>
@@ -53,6 +54,12 @@ DockBackend::DockBackend(QObject *parent)
     timer->start();
 
     checkTrash();
+
+    m_indicatorManager = new DockIndicatorManager(this);
+    connect(m_indicatorManager, &DockIndicatorManager::indicatorsChanged, this, [this]() {
+        m_indicatorsVersion++;
+        Q_EMIT indicatorsChanged();
+    });
 }
 
 bool DockBackend::isTrashFull() const
@@ -68,6 +75,31 @@ int DockBackend::trashItemCount() const
 QString DockBackend::downloadsPath() const
 {
     return m_downloadsPath;
+}
+
+int DockBackend::badgeCount(const QString &appId, const QString &launcherUrl, const QString &title) const
+{
+    return m_indicatorManager ? m_indicatorManager->badgeCount(appId, launcherUrl, title) : 0;
+}
+
+bool DockBackend::badgeVisible(const QString &appId, const QString &launcherUrl, const QString &title) const
+{
+    return m_indicatorManager ? m_indicatorManager->badgeVisible(appId, launcherUrl, title) : false;
+}
+
+double DockBackend::progress(const QString &appId, const QString &launcherUrl) const
+{
+    return m_indicatorManager ? m_indicatorManager->progress(appId, launcherUrl) : 0.0;
+}
+
+bool DockBackend::progressVisible(const QString &appId, const QString &launcherUrl) const
+{
+    return m_indicatorManager ? m_indicatorManager->progressVisible(appId, launcherUrl) : false;
+}
+
+bool DockBackend::demandsAttention(const QString &appId, const QString &launcherUrl) const
+{
+    return m_indicatorManager ? m_indicatorManager->demandsAttention(appId, launcherUrl) : false;
 }
 
 void DockBackend::checkTrash()

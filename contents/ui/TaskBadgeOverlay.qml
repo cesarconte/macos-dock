@@ -9,7 +9,7 @@ Item {
     id: root
     anchors.fill: parent
 
-    readonly property bool hasBadge: task.smartLauncherItem && task.smartLauncherItem.countVisible && task.smartLauncherItem.count > 0
+    readonly property bool hasBadge: task.badgeVisible && task.badgeCount > 0
 
     Badge {
         id: badgeRect
@@ -21,7 +21,7 @@ Item {
 
         height: Math.max(16, Math.round(parent.height * 0.42))
         visible: root.hasBadge
-        number: task.smartLauncherItem ? task.smartLauncherItem.count : 0
+        number: task.badgeCount
 
         scale: visible ? 1.0 : 0.0
         opacity: visible ? 1.0 : 0.0

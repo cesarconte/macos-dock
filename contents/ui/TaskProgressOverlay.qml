@@ -9,7 +9,7 @@ Item {
     id: progressOverlay
     anchors.fill: parent
 
-    readonly property real progressVal: task.smartLauncherItem ? Math.min(1.0, Math.max(0.0, task.smartLauncherItem.progress / 100.0)) : 0.0
+    readonly property real progressVal: task.taskProgress
 
     // macOS Progress Pill Track
     Rectangle {

@@ -98,6 +98,23 @@ PlasmaCore.ToolTipArea {
     readonly property bool smartLauncherEnabled: !inPopup
     property QtObject smartLauncherItem: null
 
+    readonly property int badgeCount: {
+        const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeCount(task.appId, task.launcherUrl, task.model ? task.model.display : "") : 0;
+    }
+    readonly property bool badgeVisible: {
+        const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeVisible(task.appId, task.launcherUrl, task.model ? task.model.display : "") : false;
+    }
+    readonly property real taskProgress: {
+        const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progress(task.appId, task.launcherUrl) : 0.0;
+    }
+    readonly property bool progressVisible: {
+        const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progressVisible(task.appId, task.launcherUrl) : false;
+    }
+
     property Item audioStreamIcon: null
     property var audioStreams: []
     property bool delayAudioStreamIndicator: false
@@ -132,8 +149,8 @@ PlasmaCore.ToolTipArea {
                 att = Boolean(tasksModel.data(mIdx, TaskManager.AbstractTasksModel.IsDemandingAttention));
             }
 
-            // 3. Smart launcher urgency
-            if (!att && task.smartLauncherItem && task.smartLauncherItem.urgent) {
+            // 3. Urgent indicators (Unity / DBus)
+            if (!att && typeof dockBackend !== "undefined" && dockBackend && dockBackend.demandsAttention(task.appId, task.launcherUrl)) {
                 att = true;
             }
 
@@ -174,7 +191,7 @@ PlasmaCore.ToolTipArea {
         }
         return false;
     }
-    readonly property bool demandsAttention: hasAttention || Boolean(task.model.IsDemandingAttention || (task.smartLauncherItem && task.smartLauncherItem.urgent) || task.model.IsStartup)
+    readonly property bool demandsAttention: hasAttention || Boolean(task.model.IsDemandingAttention || (typeof dockBackend !== "undefined" && dockBackend && dockBackend.demandsAttention(task.appId, task.launcherUrl)) || task.model.IsStartup)
 
     active: !inPopup && !tasksRoot.groupDialog && task.contextMenu?.status !== PlasmaExtras.Menu.Open
     interactive: model.IsWindow || mainItem.playerData
@@ -271,8 +288,8 @@ PlasmaCore.ToolTipArea {
         }
 
         let smartLauncherDescription = "";
-        if (iconBox.active) {
-            smartLauncherDescription += i18ncp("@info:tooltip", "There is %1 new message.", "There are %1 new messages.", task.smartLauncherItem.count);
+        if (task.badgeVisible && task.badgeCount > 0) {
+            smartLauncherDescription += i18ncp("@info:tooltip", "There is %1 new message.", "There are %1 new messages.", task.badgeCount);
         }
 
         if (model.IsGroupParent) {
@@ -541,8 +558,8 @@ PlasmaCore.ToolTipArea {
         mainItem.isOnAllVirtualDesktops = Qt.binding(() => model.IsOnAllVirtualDesktops);
         mainItem.activities = Qt.binding(() => model.Activities);
 
-        mainItem.smartLauncherCountVisible = Qt.binding(() => smartLauncherItem?.countVisible ?? false);
-        mainItem.smartLauncherCount = Qt.binding(() => mainItem.smartLauncherCountVisible ? (smartLauncherItem?.count ?? 0) : 0);
+        mainItem.smartLauncherCountVisible = Qt.binding(() => task.badgeVisible);
+        mainItem.smartLauncherCount = Qt.binding(() => task.badgeCount);
 
         mainItem.blockingUpdates = false;
         tasksRoot.toolTipAreaItem = this;
@@ -771,7 +788,7 @@ PlasmaCore.ToolTipArea {
 
         asynchronous: true
         active: height >= Kirigami.Units.iconSizes.small
-                && task.smartLauncherItem && task.smartLauncherItem.countVisible
+                && task.badgeVisible && task.badgeCount > 0
         source: "TaskBadgeOverlay.qml"
 
         function adjustMargin(isVertical: bool, size: real, margin: real): real {
@@ -845,7 +862,7 @@ PlasmaCore.ToolTipArea {
         id: taskProgressOverlayLoader
         anchors.fill: iconBox
         asynchronous: true
-        active: task.smartLauncherItem && task.smartLauncherItem.progressVisible
+        active: task.progressVisible
         source: "TaskProgressOverlay.qml"
         z: 10
     }
