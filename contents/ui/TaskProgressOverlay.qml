@@ -9,7 +9,7 @@ Item {
     id: progressOverlay
     anchors.fill: parent
 
-    readonly property real progressVal: task.taskProgress
+    readonly property real progressVal: (typeof task !== "undefined" && task) ? task.taskProgress : 0.0
 
     // macOS Progress Pill Track
     Rectangle {
@@ -21,9 +21,10 @@ Item {
         width: Math.round(parent.width * 0.75)
         height: Math.max(4, Math.round(parent.height * 0.09))
         radius: height / 2
+        clip: true
 
-        color: Qt.rgba(0, 0, 0, 0.6)
-        border.color: Qt.rgba(255, 255, 255, 0.3)
+        color: Qt.rgba(0, 0, 0, 0.65)
+        border.color: Qt.rgba(255, 255, 255, 0.35)
         border.width: 1
 
         // Progress Fill
@@ -31,7 +32,7 @@ Item {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: Math.max(parent.height, Math.round(parent.width * progressOverlay.progressVal))
+            width: Math.max(0, Math.round(parent.width * Math.min(1.0, Math.max(0.0, progressOverlay.progressVal))))
             radius: parent.radius
 
             gradient: Gradient {

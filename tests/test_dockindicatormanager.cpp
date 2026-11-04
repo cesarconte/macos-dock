@@ -5,6 +5,9 @@
 
 #include <QTest>
 #include <QSignalSpy>
+#include <QDBusMessage>
+#include <QDBusConnection>
+#include <KService>
 #include "dockindicatormanager.h"
 
 class TestDockIndicatorManager : public QObject
@@ -19,15 +22,22 @@ private Q_SLOTS:
     void testUnityLauncherBadges();
     void testWebAppTitleBadgeFallback();
     void testLiveProtonMailSni();
+    void testKServiceResolution();
+    void testLiveDbusUnitySignal();
 };
 
 void TestDockIndicatorManager::testNormalizeKey()
 {
     QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("applications:proton-mail.desktop")), QStringLiteral("proton-mail"));
-    QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("application://brave-origin.desktop")), QStringLiteral("brave-origin"));
+    QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("application://brave-origin.desktop")), QStringLiteral("brave"));
+    QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("application://brave-browser.desktop")), QStringLiteral("brave"));
+    QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("brave-origin")), QStringLiteral("brave"));
+    QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("file:///usr/share/applications/brave-origin.desktop")), QStringLiteral("brave"));
     QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("applications:brave-hnpfjngllnobngcgfapefoaidbinmjnm-Default.desktop")), QStringLiteral("whatsapp"));
     QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("WhatsApp")), QStringLiteral("whatsapp"));
     QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("crx_hnpfjngllnobngcgfapefoaidbinmjnm")), QStringLiteral("whatsapp"));
+    QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("applications:google-chrome.desktop")), QStringLiteral("google-chrome"));
+    QCOMPARE(DockIndicatorManager::normalizeKey(QStringLiteral("applications:chromium-browser.desktop")), QStringLiteral("chromium"));
 }
 
 void TestDockIndicatorManager::testTitleBadgeParsing()
@@ -116,6 +126,46 @@ void TestDockIndicatorManager::testLiveProtonMailSni()
     int count = manager.badgeCount(QStringLiteral("proton-mail"), QStringLiteral("applications:proton-mail.desktop"), QStringLiteral("Proton Mail"));
     qDebug() << "Live Proton Mail unread count detected via SNI:" << count;
     QVERIFY(count >= 0);
+}
+
+void TestDockIndicatorManager::testKServiceResolution()
+{
+    auto s1 = KService::serviceByStorageId(QStringLiteral("brave-origin.desktop"));
+    qDebug() << "serviceByStorageId brave-origin.desktop:" << (s1 ? s1->storageId() : QStringLiteral("NULL"))
+             << "entryPath:" << (s1 ? s1->entryPath() : QString())
+             << "menuId:" << (s1 ? s1->menuId() : QString());
+
+    auto s2 = KService::serviceByStorageId(QStringLiteral("brave-browser.desktop"));
+    qDebug() << "serviceByStorageId brave-browser.desktop:" << (s2 ? s2->storageId() : QStringLiteral("NULL"));
+
+    auto s3 = KService::serviceByDesktopName(QStringLiteral("brave-origin"));
+    qDebug() << "serviceByDesktopName brave-origin:" << (s3 ? s3->storageId() : QStringLiteral("NULL"));
+}
+
+void TestDockIndicatorManager::testLiveDbusUnitySignal()
+{
+    DockIndicatorManager manager;
+    QSignalSpy spy(&manager, &DockIndicatorManager::indicatorsChanged);
+
+    // Send a real DBus signal as plasmashell (jobs) or chromium does
+    QDBusMessage msg = QDBusMessage::createSignal(
+        QStringLiteral("/org/kde/notificationmanager/jobs"),
+        QStringLiteral("com.canonical.Unity.LauncherEntry"),
+        QStringLiteral("Update")
+    );
+    QMap<QString, QVariant> props;
+    props.insert(QStringLiteral("progress"), 0.72);
+    props.insert(QStringLiteral("progress-visible"), true);
+    msg.setArguments({QStringLiteral("application://brave-browser.desktop"), props});
+
+    bool sent = QDBusConnection::sessionBus().send(msg);
+    QVERIFY(sent);
+
+    // Wait up to 1000ms for DBus signal dispatch
+    QTRY_VERIFY_WITH_TIMEOUT(spy.count() >= 1, 1000);
+
+    QVERIFY(manager.progressVisible(QStringLiteral("brave-origin"), QStringLiteral("preferred://browser")));
+    QCOMPARE(manager.progress(QStringLiteral("brave-origin"), QStringLiteral("preferred://browser")), 0.72);
 }
 
 QTEST_MAIN(TestDockIndicatorManager)

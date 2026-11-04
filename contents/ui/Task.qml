@@ -86,7 +86,7 @@ PlasmaCore.ToolTipArea {
 
     readonly property int pid: model.AppPid
     readonly property string appName: model.AppName
-    readonly property string appId: model.AppId.replace(/\.desktop/, '')
+    readonly property string appId: (model.AppId || "").replace(/\.desktop/, '')
     readonly property bool isIcon: tasksRoot.iconsOnly || model.IsLauncher
     property bool toolTipOpen: false
     property bool inPopup: false
@@ -100,19 +100,19 @@ PlasmaCore.ToolTipArea {
 
     readonly property int badgeCount: {
         const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
-        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeCount(task.appId, model.LauncherUrlWithoutIcon, task.model ? task.model.display : "") : 0;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeCount(task.appId, String(model.LauncherUrlWithoutIcon || ""), task.model ? task.model.display : "") : 0;
     }
     readonly property bool badgeVisible: {
         const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
-        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeVisible(task.appId, model.LauncherUrlWithoutIcon, task.model ? task.model.display : "") : false;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeVisible(task.appId, String(model.LauncherUrlWithoutIcon || ""), task.model ? task.model.display : "") : false;
     }
     readonly property real taskProgress: {
         const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
-        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progress(task.appId, model.LauncherUrlWithoutIcon) : 0.0;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progress(task.appId, String(model.LauncherUrlWithoutIcon || "")) : 0.0;
     }
     readonly property bool progressVisible: {
         const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
-        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progressVisible(task.appId, model.LauncherUrlWithoutIcon) : false;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progressVisible(task.appId, String(model.LauncherUrlWithoutIcon || "")) : false;
     }
 
     property Item audioStreamIcon: null

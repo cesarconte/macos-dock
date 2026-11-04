@@ -41,6 +41,16 @@ QString DockIndicatorManager::normalizeKey(const QString &key)
         norm.remove(0, 7);
     }
 
+    const int queryIdx = norm.indexOf(QLatin1Char('?'));
+    if (queryIdx != -1) {
+        norm = norm.left(queryIdx);
+    }
+
+    const int slashIdx = norm.lastIndexOf(QLatin1Char('/'));
+    if (slashIdx != -1) {
+        norm = norm.mid(slashIdx + 1);
+    }
+
     if (norm.endsWith(QLatin1String(".desktop"), Qt::CaseInsensitive)) {
         norm.chop(8);
     }
@@ -56,6 +66,22 @@ QString DockIndicatorManager::normalizeKey(const QString &key)
 
     if (norm.contains(QLatin1String("proton-mail")) || norm.contains(QLatin1String("protonmail"))) {
         return QStringLiteral("proton-mail");
+    }
+
+    // Brave browser and variants
+    if (norm == QLatin1String("brave")
+        || norm == QLatin1String("brave-origin")
+        || norm == QLatin1String("brave-browser")
+        || norm == QLatin1String("brave-bin")) {
+        return QStringLiteral("brave");
+    }
+
+    // Chrome and Chromium variants
+    if (norm == QLatin1String("google-chrome") || norm == QLatin1String("google-chrome-stable")) {
+        return QStringLiteral("google-chrome");
+    }
+    if (norm == QLatin1String("chromium") || norm == QLatin1String("chromium-browser")) {
+        return QStringLiteral("chromium");
     }
 
     return norm;
@@ -264,18 +290,20 @@ void DockIndicatorManager::initUnityListener()
     sessionBus.registerService(QStringLiteral("com.canonical.Unity"));
 
     // Listen for Unity LauncherEntry Update signals broadcast by Chromium, Brave, Telegram, Thunderbird, etc.
-    sessionBus.connect(
+    bool ok = sessionBus.connect(
         QString(),
         QString(),
         QStringLiteral("com.canonical.Unity.LauncherEntry"),
         QStringLiteral("Update"),
         this,
-        SLOT(onUnityLauncherUpdate(QString,QVariantMap))
+        SLOT(onUnityLauncherUpdate(QString,QMap<QString,QVariant>))
     );
+    qDebug() << "DockIndicatorManager::initUnityListener sessionBus.connect returned:" << ok;
 }
 
-void DockIndicatorManager::onUnityLauncherUpdate(const QString &appUri, const QVariantMap &properties)
+void DockIndicatorManager::onUnityLauncherUpdate(const QString &appUri, const QMap<QString, QVariant> &properties)
 {
+    qDebug() << "DockIndicatorManager::onUnityLauncherUpdate:" << appUri << properties;
     if (appUri.isEmpty()) {
         return;
     }

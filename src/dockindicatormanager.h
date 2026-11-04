@@ -48,7 +48,7 @@ public:
     static int parseBadgeFromText(const QString &text);
 
 public Q_SLOTS:
-    void onUnityLauncherUpdate(const QString &appUri, const QVariantMap &properties);
+    void onUnityLauncherUpdate(const QString &appUri, const QMap<QString, QVariant> &properties);
     void onStatusNotifierItemRegistered(const QString &service);
     void onStatusNotifierItemUnregistered(const QString &service);
     void refreshAllSniItems();
