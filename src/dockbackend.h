@@ -38,6 +38,7 @@ public:
     Q_INVOKABLE double progress(const QString &appId, const QString &launcherUrl) const;
     Q_INVOKABLE bool progressVisible(const QString &appId, const QString &launcherUrl) const;
     Q_INVOKABLE bool demandsAttention(const QString &appId, const QString &launcherUrl) const;
+    Q_INVOKABLE QString iconForUrl(const QUrl &url, bool isDir) const;
 
 public Q_SLOTS:
     void openTrash();

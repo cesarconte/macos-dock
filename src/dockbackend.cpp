@@ -24,6 +24,8 @@
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QMimeData>
+#include <QMimeDatabase>
+#include <QMimeType>
 
 static DockBackend *s_instance = nullptr;
 
@@ -121,6 +123,26 @@ bool DockBackend::progressVisible(const QString &appId, const QString &launcherU
 bool DockBackend::demandsAttention(const QString &appId, const QString &launcherUrl) const
 {
     return m_indicatorManager ? m_indicatorManager->demandsAttention(appId, launcherUrl) : false;
+}
+
+QString DockBackend::iconForUrl(const QUrl &url, bool isDir) const
+{
+    if (isDir) {
+        return QStringLiteral("folder");
+    }
+    QMimeDatabase db;
+    QMimeType mime = db.mimeTypeForUrl(url);
+    if (mime.isValid()) {
+        const QString iconName = mime.iconName();
+        if (!iconName.isEmpty()) {
+            return iconName;
+        }
+        const QString genericIconName = mime.genericIconName();
+        if (!genericIconName.isEmpty()) {
+            return genericIconName;
+        }
+    }
+    return QStringLiteral("application-octet-stream");
 }
 
 void DockBackend::checkTrash()

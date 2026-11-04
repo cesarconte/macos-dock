@@ -24,6 +24,11 @@ PlasmaCore.PopupPlasmaWindow {
     property url currentContextUrl: ""
     property string currentContextName: ""
 
+    property Item hoveredDelegate: null
+    property string hoveredFileName: ""
+    property var hoveredFileSize: 0
+    property bool hoveredIsDir: false
+
     function formatFileSize(bytes): string {
         if (!bytes || bytes <= 0) return "";
         if (bytes < 1024) return bytes + " B";
@@ -41,8 +46,14 @@ PlasmaCore.PopupPlasmaWindow {
         }
     }
 
+    onVisibleChanged: {
+        if (!visible) {
+            hoveredDelegate = null;
+        }
+    }
+
     width: 380
-    height: Math.min(520, headerItem.height + gridContainer.implicitHeight + 24)
+    height: Math.max(220, Math.min(520, headerItem.height + gridContainer.implicitHeight + 32))
 
     mainItem: Item {
         id: mainContainer
@@ -216,7 +227,22 @@ PlasmaCore.PopupPlasmaWindow {
 
                     readonly property bool isHovered: mouseArea.containsMouse
 
-                    z: isHovered ? 20 : 1
+                    onIsHoveredChanged: {
+                        if (isHovered) {
+                            stackDialog.hoveredDelegate = fileItem;
+                            stackDialog.hoveredFileName = fileItem.fileName;
+                            stackDialog.hoveredFileSize = fileItem.fileSize;
+                            stackDialog.hoveredIsDir = fileItem.fileIsDir;
+                        } else if (stackDialog.hoveredDelegate === fileItem) {
+                            stackDialog.hoveredDelegate = null;
+                        }
+                    }
+
+                    function isImageFile(name: string): bool {
+                        const lower = (name || "").toLowerCase();
+                        return lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")
+                            || lower.endsWith(".svg") || lower.endsWith(".webp") || lower.endsWith(".gif");
+                    }
 
                     // Highlight capsule
                     Rectangle {
@@ -250,8 +276,8 @@ PlasmaCore.PopupPlasmaWindow {
                             Kirigami.Icon {
                                 id: fileIcon
                                 anchors.fill: parent
-                                source: fileItem.fileIsDir ? "folder" : fileItem.fileUrl
-                                fallback: fileItem.fileIsDir ? "folder" : "unknown"
+                                source: fileItem.fileIsDir ? "folder" : (fileItem.isImageFile(fileItem.fileName) ? fileItem.fileUrl : DockBackend.iconForUrl(fileItem.fileUrl, false))
+                                fallback: DockBackend.iconForUrl(fileItem.fileUrl, fileItem.fileIsDir)
                                 smooth: true
 
                                 scale: fileItem.isHovered ? 1.08 : 1.0
@@ -279,57 +305,6 @@ PlasmaCore.PopupPlasmaWindow {
                         }
                     }
 
-                    // macOS Floating Full-Name Tooltip (Dark glass pill)
-                    Rectangle {
-                        id: macTooltip
-                        visible: fileItem.isHovered
-                        z: 999
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.top
-                        anchors.bottomMargin: 6
-                        width: Math.min(260, tooltipCol.implicitWidth + 18)
-                        height: tooltipCol.implicitHeight + 10
-                        radius: 8
-                        color: Qt.rgba(0.12, 0.12, 0.14, 0.94)
-                        border.color: Qt.rgba(1, 1, 1, 0.22)
-                        border.width: 1
-
-                        opacity: fileItem.isHovered ? 1.0 : 0.0
-                        Behavior on opacity {
-                            NumberAnimation { duration: 120 }
-                        }
-
-                        Column {
-                            id: tooltipCol
-                            anchors.centerIn: parent
-                            width: parent.width - 16
-                            spacing: 2
-
-                            Text {
-                                text: fileItem.fileName
-                                width: parent.width
-                                horizontalAlignment: Text.AlignHCenter
-                                font.pixelSize: 11
-                                font.weight: Font.DemiBold
-                                font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
-                                color: "#FFFFFF"
-                                elide: Text.ElideMiddle
-                                maximumLineCount: 3
-                                wrapMode: Text.WrapAnywhere
-                            }
-
-                            Text {
-                                visible: !fileItem.fileIsDir && Boolean(fileItem.fileSize)
-                                text: stackDialog.formatFileSize(fileItem.fileSize)
-                                width: parent.width
-                                horizontalAlignment: Text.AlignHCenter
-                                font.pixelSize: 10
-                                font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
-                                color: Qt.rgba(1, 1, 1, 0.65)
-                            }
-                        }
-                    }
-
                     MouseArea {
                         id: mouseArea
                         anchors.fill: parent
@@ -348,6 +323,76 @@ PlasmaCore.PopupPlasmaWindow {
                             }
                         }
                     }
+                }
+            }
+        }
+
+        // Shared macOS Floating Tooltip Overlay (Drawn at top-level outside GridView clipping)
+        Rectangle {
+            id: hoverTooltipOverlay
+            visible: opacity > 0.0
+            opacity: (stackDialog.hoveredDelegate !== null) ? 1.0 : 0.0
+            z: 9999
+
+            width: Math.min(270, tooltipCol.implicitWidth + 24)
+            height: tooltipCol.implicitHeight + 14
+            radius: 10
+            color: Qt.rgba(0.12, 0.12, 0.14, 0.94)
+            border.color: Qt.rgba(1, 1, 1, 0.22)
+            border.width: 1
+
+            Behavior on opacity {
+                NumberAnimation { duration: 120 }
+            }
+
+            readonly property real itemX: stackDialog.hoveredDelegate ? stackDialog.hoveredDelegate.mapToItem(mainContainer, 0, 0).x : 0
+            readonly property real itemY: stackDialog.hoveredDelegate ? stackDialog.hoveredDelegate.mapToItem(mainContainer, 0, 0).y : 0
+            readonly property real itemW: stackDialog.hoveredDelegate ? stackDialog.hoveredDelegate.width : 0
+            readonly property real itemH: stackDialog.hoveredDelegate ? stackDialog.hoveredDelegate.height : 0
+
+            // Strictly clamped horizontally within mainContainer margins [12, mainContainer.width - width - 12]
+            x: {
+                const idealX = itemX + (itemW - width) / 2;
+                return Math.max(12, Math.min(mainContainer.width - width - 12, idealX));
+            }
+
+            // Smart vertical positioning: place above if room, otherwise flip below the item
+            y: {
+                const spaceAbove = itemY - headerItem.height;
+                if (spaceAbove >= height + 10) {
+                    return itemY - height - 6;
+                } else {
+                    return Math.min(mainContainer.height - height - 8, itemY + itemH + 6);
+                }
+            }
+
+            Column {
+                id: tooltipCol
+                anchors.centerIn: parent
+                width: parent.width - 20
+                spacing: 2
+
+                Text {
+                    text: stackDialog.hoveredFileName
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
+                    color: "#FFFFFF"
+                    elide: Text.ElideMiddle
+                    maximumLineCount: 3
+                    wrapMode: Text.WrapAnywhere
+                }
+
+                Text {
+                    visible: !stackDialog.hoveredIsDir && Boolean(stackDialog.hoveredFileSize)
+                    text: stackDialog.formatFileSize(stackDialog.hoveredFileSize)
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    font.pixelSize: 10
+                    font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
+                    color: Qt.rgba(1, 1, 1, 0.65)
                 }
             }
         }
