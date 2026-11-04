@@ -18,7 +18,12 @@
 #include <KIO/EmptyTrashJob>
 #include <KIO/OpenUrlJob>
 #include <KIO/ApplicationLauncherJob>
+#include <KIO/JobUiDelegateFactory>
+#include <KIO/OpenFileManagerWindowJob>
 #include <KService>
+#include <QClipboard>
+#include <QGuiApplication>
+#include <QMimeData>
 
 static DockBackend *s_instance = nullptr;
 
@@ -229,7 +234,43 @@ void DockBackend::openUrl(const QUrl &url)
 {
     qDebug() << "DockBackend::openUrl() CALLED with" << url;
     auto *job = new KIO::OpenUrlJob(url);
+    job->setUiDelegate(KIO::createDefaultJobUiDelegate());
+    job->setShowOpenOrExecuteDialog(true);
+    job->setRunExecutables(true);
+    connect(job, &KJob::result, this, [url](KJob *job) {
+        if (job->error()) {
+            qWarning() << "OpenUrlJob error, falling back to QDesktopServices:" << job->errorString();
+            QDesktopServices::openUrl(url);
+        }
+    });
     job->start();
+}
+
+void DockBackend::showInFolder(const QUrl &url)
+{
+    qDebug() << "DockBackend::showInFolder() CALLED with" << url;
+    auto *job = KIO::highlightInFileManager({url});
+    if (job) {
+        job->start();
+    }
+}
+
+void DockBackend::copyToClipboard(const QUrl &url)
+{
+    qDebug() << "DockBackend::copyToClipboard() CALLED with" << url;
+    auto *clipboard = QGuiApplication::clipboard();
+    if (!clipboard) {
+        return;
+    }
+    auto *mimeData = new QMimeData();
+    mimeData->setUrls({url});
+    mimeData->setText(url.isLocalFile() ? url.toLocalFile() : url.toString());
+    clipboard->setMimeData(mimeData);
+}
+
+void DockBackend::trashUrl(const QUrl &url)
+{
+    moveToTrash({url});
 }
 
 void DockBackend::moveToTrash(const QList<QUrl> &urls)

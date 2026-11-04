@@ -44,6 +44,9 @@ public Q_SLOTS:
     void emptyTrash();
     void openDownloads();
     void openUrl(const QUrl &url);
+    void showInFolder(const QUrl &url);
+    void copyToClipboard(const QUrl &url);
+    void trashUrl(const QUrl &url);
     void toggleLaunchpad();
     void setLaunchpadCallback(std::function<void()> cb);
     void moveToTrash(const QList<QUrl> &urls);
