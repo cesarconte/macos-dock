@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(macos-dock LANGUAGES CXX)
+project(macos-dock LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,6 +13,9 @@ set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GIO REQUIRED gio-2.0)
 
 find_package(Qt6 6.6 REQUIRED COMPONENTS Core Gui Widgets Quick Qml DBus Test)
 find_package(KF6 6.0 REQUIRED COMPONENTS CoreAddons WindowSystem I18n Config Package DBusAddons KIO Service)
@@ -55,7 +58,19 @@ target_link_libraries(macos-dock PRIVATE
     PW::LibNotificationManager
 )
 
-install(TARGETS macos-dock ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+# Native Unity LauncherEntry shim library for Chromium / Brave
+add_library(unity SHARED
+    src/libunity_shim/libunity.c
+)
+set_target_properties(unity PROPERTIES
+    OUTPUT_NAME "unity"
+    SOVERSION "9"
+    VERSION "9.0.0"
+)
+target_include_directories(unity PRIVATE ${GIO_INCLUDE_DIRS})
+target_link_libraries(unity PRIVATE ${GIO_LIBRARIES})
+
+install(TARGETS macos-dock unity ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 
 # Unit tests
 include(CTest)
