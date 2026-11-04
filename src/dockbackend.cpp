@@ -26,6 +26,8 @@
 #include <QMimeData>
 #include <QMimeDatabase>
 #include <QMimeType>
+#include <QSet>
+#include <QXmlStreamReader>
 
 static DockBackend *s_instance = nullptr;
 
@@ -340,26 +342,88 @@ void DockBackend::copyToDownloads(const QList<QUrl> &urls)
 QVariantList DockBackend::finderPlaces() const
 {
     QVariantList list;
+    QSet<QString> addedPaths;
 
-    auto addPlace = [&list](const QString &title, const QString &path, const QString &icon) {
-        if (!path.isEmpty()) {
+    auto addPlace = [&list, &addedPaths](const QString &title, const QString &path, const QString &icon) {
+        if (!path.isEmpty() && !addedPaths.contains(path)) {
+            addedPaths.insert(path);
             QVariantMap m;
             m.insert(QStringLiteral("title"), title);
             m.insert(QStringLiteral("path"), path);
-            m.insert(QStringLiteral("icon"), icon);
+            m.insert(QStringLiteral("icon"), icon.isEmpty() ? QStringLiteral("folder") : icon);
             list.append(m);
         }
     };
 
-    addPlace(tr("Carpeta personal"), QDir::homePath(), QStringLiteral("user-home"));
-    addPlace(tr("Descargas"), QStandardPaths::writableLocation(QStandardPaths::DownloadLocation), QStringLiteral("folder-download"));
-    addPlace(tr("Documentos"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation), QStringLiteral("folder-documents"));
-    addPlace(tr("Escritorio"), QStandardPaths::writableLocation(QStandardPaths::DesktopLocation), QStringLiteral("user-desktop"));
-    addPlace(tr("Imágenes"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), QStringLiteral("folder-pictures"));
-    addPlace(tr("Música"), QStandardPaths::writableLocation(QStandardPaths::MusicLocation), QStringLiteral("folder-music"));
-    addPlace(tr("Vídeos"), QStandardPaths::writableLocation(QStandardPaths::MoviesLocation), QStringLiteral("folder-videos"));
-    addPlace(tr("Papelera"), QStringLiteral("trash:/"), QStringLiteral("user-trash"));
-    addPlace(tr("Red"), QStringLiteral("remote:/"), QStringLiteral("network-workgroup"));
+    // 1. Parse user places from ~/.local/share/user-places.xbel (Dolphin Places / Favoritos)
+    const QString xbelPath = QDir::homePath() + QStringLiteral("/.local/share/user-places.xbel");
+    QFile file(xbelPath);
+    if (file.open(QIODevice::ReadOnly)) {
+        QXmlStreamReader xml(&file);
+        QString currentHref;
+        QString currentTitle;
+        QString currentIcon;
+        bool isHidden = false;
+
+        while (!xml.atEnd()) {
+            xml.readNext();
+            if (xml.isStartElement()) {
+                if (xml.name() == QLatin1String("bookmark")) {
+                    currentHref = xml.attributes().value(QLatin1String("href")).toString();
+                    currentTitle.clear();
+                    currentIcon.clear();
+                    isHidden = false;
+                } else if (xml.name() == QLatin1String("title")) {
+                    currentTitle = xml.readElementText();
+                } else if (xml.name() == QLatin1String("icon")) {
+                    currentIcon = xml.attributes().value(QLatin1String("name")).toString();
+                } else if (xml.name() == QLatin1String("IsHidden")) {
+                    if (xml.readElementText() == QLatin1String("true")) {
+                        isHidden = true;
+                    }
+                }
+            } else if (xml.isEndElement() && xml.name() == QLatin1String("bookmark")) {
+                if (!isHidden && !currentHref.isEmpty() && !currentHref.startsWith(QLatin1String("recentlyused:"))) {
+                    QUrl url(currentHref);
+                    QString path = url.isLocalFile() ? url.toLocalFile() : currentHref;
+                    QString title = currentTitle;
+
+                    if (title == QLatin1String("Home")) title = tr("Carpeta personal");
+                    else if (title == QLatin1String("Desktop")) title = tr("Escritorio");
+                    else if (title == QLatin1String("Downloads")) title = tr("Descargas");
+                    else if (title == QLatin1String("Documents")) title = tr("Documentos");
+                    else if (title == QLatin1String("Pictures")) title = tr("Imágenes");
+                    else if (title == QLatin1String("Music")) title = tr("Música");
+                    else if (title == QLatin1String("Videos")) title = tr("Vídeos");
+                    else if (title == QLatin1String("Trash")) title = tr("Papelera");
+                    else if (title == QLatin1String("Network")) title = tr("Red");
+
+                    addPlace(title, path, currentIcon);
+                }
+            }
+        }
+    }
+
+    // Fallbacks si xbel estaba vacío o ausente
+    if (list.isEmpty()) {
+        addPlace(tr("Carpeta personal"), QDir::homePath(), QStringLiteral("user-home"));
+        addPlace(tr("Descargas"), QStandardPaths::writableLocation(QStandardPaths::DownloadLocation), QStringLiteral("folder-download"));
+        addPlace(tr("Documentos"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation), QStringLiteral("folder-documents"));
+        addPlace(tr("Escritorio"), QStandardPaths::writableLocation(QStandardPaths::DesktopLocation), QStringLiteral("user-desktop"));
+        addPlace(tr("Imágenes"), QStandardPaths::writableLocation(QStandardPaths::PicturesLocation), QStringLiteral("folder-pictures"));
+        addPlace(tr("Música"), QStandardPaths::writableLocation(QStandardPaths::MusicLocation), QStringLiteral("folder-music"));
+        addPlace(tr("Vídeos"), QStandardPaths::writableLocation(QStandardPaths::MoviesLocation), QStringLiteral("folder-videos"));
+        addPlace(tr("Papelera"), QStringLiteral("trash:/"), QStringLiteral("user-trash"));
+        addPlace(tr("Red"), QStringLiteral("remote:/"), QStringLiteral("network-workgroup"));
+    }
+
+    // 2. Integración automática de montajes / carpetas multimedia dedicadas (/media/Vídeos y /media/Música)
+    if (QDir(QStringLiteral("/media/Vídeos")).exists()) {
+        addPlace(tr("Vídeos (/media)"), QStringLiteral("/media/Vídeos"), QStringLiteral("folder-videos"));
+    }
+    if (QDir(QStringLiteral("/media/Música")).exists()) {
+        addPlace(tr("Música (/media)"), QStringLiteral("/media/Música"), QStringLiteral("folder-music"));
+    }
 
     return list;
 }
