@@ -47,6 +47,8 @@ protected:
 public Q_SLOTS:
     void updateMask();
     void updateScreenGeometry();
+    void adaptToScreen();
+    void onPrepareForSleep(bool sleeping);
 
 private:
     Plasma::Corona *m_corona = nullptr;
@@ -56,4 +58,6 @@ private:
     LayerShellQt::Window *m_layerWindow = nullptr;
     DockBackend *m_backend = nullptr;
     int m_dockCanvasHeight = 128;
+    QMetaObject::Connection m_screenGeometryConnection;
+    QMetaObject::Connection m_screenResolutionConnection;
 };

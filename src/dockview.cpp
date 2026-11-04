@@ -13,6 +13,9 @@
 #include <QQuickItem>
 #include <QResizeEvent>
 #include <QShowEvent>
+#include <QDBusConnection>
+#include <QTimer>
+#include <QDebug>
 
 #include <Plasma/Applet>
 #include <Plasma/Containment>
@@ -37,13 +40,6 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
     });
     rootContext()->setContextProperty(QStringLiteral("dockBackend"), m_backend);
 
-    if (auto screen = QGuiApplication::primaryScreen()) {
-        const QRect geom = screen->geometry();
-        setPosition(QPoint(geom.x(), geom.y() + geom.height() - m_dockCanvasHeight));
-        resize(geom.width(), m_dockCanvasHeight);
-        connect(screen, &QScreen::geometryChanged, this, &DockView::updateScreenGeometry);
-    }
-
     m_layerWindow = LayerShellQt::Window::get(this);
     if (m_layerWindow) {
         m_layerWindow->setScope(QStringLiteral("macos-dock"));
@@ -55,6 +51,49 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
         m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
         m_layerWindow->setCloseOnDismissed(false);
     }
+
+    adaptToScreen();
+
+    // Monitor screen lifecycle for DPMS resume, multi-monitor, and resolution changes
+    connect(qGuiApp, &QGuiApplication::screenAdded, this, [this](QScreen *s) {
+        qDebug() << "DockView: Screen added:" << (s ? s->name() : QStringLiteral("null"));
+        QTimer::singleShot(250, this, &DockView::adaptToScreen);
+        QTimer::singleShot(1000, this, &DockView::adaptToScreen);
+    });
+
+    connect(qGuiApp, &QGuiApplication::screenRemoved, this, [this](QScreen *s) {
+        qDebug() << "DockView: Screen removed:" << (s ? s->name() : QStringLiteral("null"));
+        QTimer::singleShot(250, this, &DockView::adaptToScreen);
+    });
+
+    connect(qGuiApp, &QGuiApplication::primaryScreenChanged, this, [this](QScreen *s) {
+        qDebug() << "DockView: Primary screen changed:" << (s ? s->name() : QStringLiteral("null"));
+        QTimer::singleShot(250, this, &DockView::adaptToScreen);
+    });
+
+    // Listen to logind PrepareForSleep signal to immediately restore surface when waking from suspend
+    QDBusConnection::systemBus().connect(
+        QStringLiteral("org.freedesktop.login1"),
+        QStringLiteral("/org/freedesktop/login1"),
+        QStringLiteral("org.freedesktop.login1.Manager"),
+        QStringLiteral("PrepareForSleep"),
+        this,
+        SLOT(onPrepareForSleep(bool))
+    );
+
+    // Watchdog timer to ensure dock is permanently visible
+    auto watchdogTimer = new QTimer(this);
+    watchdogTimer->setInterval(8000);
+    connect(watchdogTimer, &QTimer::timeout, this, [this]() {
+        auto s = QGuiApplication::primaryScreen();
+        if (s && !s->name().contains(QLatin1String("placeholder"), Qt::CaseInsensitive) && s->geometry().width() > 0) {
+            if (!isVisible() || width() <= 0 || height() <= 0) {
+                qWarning() << "DockView: Watchdog detected dock hidden or unmapped, re-adapting to screen!";
+                adaptToScreen();
+            }
+        }
+    });
+    watchdogTimer->start();
 }
 
 DockView::~DockView() = default;
@@ -146,10 +185,70 @@ void DockView::showEvent(QShowEvent *event)
     updateScreenGeometry();
 }
 
+void DockView::onPrepareForSleep(bool sleeping)
+{
+    if (!sleeping) {
+        qDebug() << "DockView: System woke from sleep, restoring dock surface";
+        QTimer::singleShot(300, this, &DockView::adaptToScreen);
+        QTimer::singleShot(1200, this, &DockView::adaptToScreen);
+    }
+}
+
+void DockView::adaptToScreen()
+{
+    auto targetScreen = QGuiApplication::primaryScreen();
+    if (!targetScreen) {
+        const auto screens = QGuiApplication::screens();
+        if (!screens.isEmpty()) {
+            targetScreen = screens.first();
+        }
+    }
+
+    if (!targetScreen) {
+        return;
+    }
+
+    // Ignore placeholder/empty screens during DPMS sleep transition
+    if (targetScreen->name().contains(QLatin1String("placeholder"), Qt::CaseInsensitive)
+        || targetScreen->geometry().width() <= 0
+        || targetScreen->geometry().height() <= 0) {
+        return;
+    }
+
+    // Re-bind geometry notifications
+    disconnect(m_screenGeometryConnection);
+    m_screenGeometryConnection = connect(targetScreen, &QScreen::geometryChanged, this, &DockView::updateScreenGeometry);
+
+    disconnect(m_screenResolutionConnection);
+    m_screenResolutionConnection = connect(targetScreen, &QScreen::availableGeometryChanged, this, &DockView::updateScreenGeometry);
+
+    if (this->screen() != targetScreen) {
+        setScreen(targetScreen);
+    }
+
+    if (m_layerWindow) {
+        m_layerWindow->setScreen(targetScreen);
+        m_layerWindow->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
+        m_layerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
+        m_layerWindow->setExclusiveZone(56);
+        m_layerWindow->setDesiredSize(QSize(targetScreen->geometry().width(), m_dockCanvasHeight));
+        m_layerWindow->setLayer(LayerShellQt::Window::LayerTop);
+        m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
+        m_layerWindow->setCloseOnDismissed(false);
+    }
+
+    updateScreenGeometry();
+
+    if (!isVisible()) {
+        show();
+    }
+    requestUpdate();
+}
+
 void DockView::updateScreenGeometry()
 {
     auto screen = this->screen() ? this->screen() : QGuiApplication::primaryScreen();
-    if (!screen) {
+    if (!screen || screen->geometry().isEmpty()) {
         return;
     }
 
@@ -167,6 +266,7 @@ void DockView::updateScreenGeometry()
         m_appletInterface->setX(0);
         m_appletInterface->setY(0);
         m_appletInterface->setSize(QSizeF(geom.width(), m_dockCanvasHeight));
+        m_appletInterface->setVisible(true);
     }
 
     updateMask();
