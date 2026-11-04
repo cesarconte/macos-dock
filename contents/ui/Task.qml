@@ -100,19 +100,19 @@ PlasmaCore.ToolTipArea {
 
     readonly property int badgeCount: {
         const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
-        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeCount(task.appId, task.launcherUrl, task.model ? task.model.display : "") : 0;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeCount(task.appId, model.LauncherUrlWithoutIcon, task.model ? task.model.display : "") : 0;
     }
     readonly property bool badgeVisible: {
         const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
-        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeVisible(task.appId, task.launcherUrl, task.model ? task.model.display : "") : false;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.badgeVisible(task.appId, model.LauncherUrlWithoutIcon, task.model ? task.model.display : "") : false;
     }
     readonly property real taskProgress: {
         const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
-        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progress(task.appId, task.launcherUrl) : 0.0;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progress(task.appId, model.LauncherUrlWithoutIcon) : 0.0;
     }
     readonly property bool progressVisible: {
         const _ = (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.indicatorsVersion : 0;
-        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progressVisible(task.appId, task.launcherUrl) : false;
+        return (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend.progressVisible(task.appId, model.LauncherUrlWithoutIcon) : false;
     }
 
     property Item audioStreamIcon: null
@@ -191,7 +191,7 @@ PlasmaCore.ToolTipArea {
         }
         return false;
     }
-    readonly property bool demandsAttention: hasAttention || Boolean(task.model.IsDemandingAttention || (typeof dockBackend !== "undefined" && dockBackend && dockBackend.demandsAttention(task.appId, task.launcherUrl)) || task.model.IsStartup)
+    readonly property bool demandsAttention: hasAttention || Boolean(task.model.IsDemandingAttention || (typeof dockBackend !== "undefined" && dockBackend && dockBackend.demandsAttention(task.appId, model.LauncherUrlWithoutIcon)) || task.model.IsStartup)
 
     active: !inPopup && !tasksRoot.groupDialog && task.contextMenu?.status !== PlasmaExtras.Menu.Open
     interactive: model.IsWindow || mainItem.playerData
@@ -816,6 +816,15 @@ PlasmaCore.ToolTipArea {
             source: task.model.decoration
         }
 
+        Loader {
+            id: taskProgressOverlayLoader
+            anchors.fill: parent
+            asynchronous: false
+            active: task.progressVisible
+            source: "TaskProgressOverlay.qml"
+            z: 10
+        }
+
         states: [
             // Using a state transition avoids a binding loop between label.visible and
             // the text label margin, which derives from the icon width.
@@ -856,15 +865,6 @@ PlasmaCore.ToolTipArea {
                 y: !tasksRoot.vertical ? (tasksRoot.effectiveLocation === PlasmaCore.Types.TopEdge ? task.currentHoverLift : -task.currentHoverLift) : 0
             }
         ]
-    }
-
-    Loader {
-        id: taskProgressOverlayLoader
-        anchors.fill: iconBox
-        asynchronous: true
-        active: task.progressVisible
-        source: "TaskProgressOverlay.qml"
-        z: 10
     }
 
     property bool testBounce: false

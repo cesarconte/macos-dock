@@ -9,7 +9,11 @@
 #include <QString>
 #include <QVariantMap>
 #include <QHash>
+#include <QSet>
 #include <QRegularExpression>
+
+#include <notificationmanager/jobsmodel.h>
+#include <notificationmanager/notifications.h>
 
 struct IndicatorData {
     int badgeCount = 0;
@@ -49,6 +53,7 @@ public Q_SLOTS:
     void onStatusNotifierItemUnregistered(const QString &service);
     void refreshAllSniItems();
     void inspectSniService(const QString &service);
+    void updateFromJobsModel();
 
 Q_SIGNALS:
     void indicatorsChanged();
@@ -56,9 +61,13 @@ Q_SIGNALS:
 private:
     void initUnityListener();
     void initSniListener();
+    void initJobsModel();
     QString defaultBrowserKey() const;
 
     QHash<QString, IndicatorData> m_indicators;
     mutable QString m_cachedDefaultBrowser;
     QHash<QString, QString> m_sniServiceMap; // service -> canonicalKey
+    QSet<QString> m_activeJobKeys;
+
+    NotificationManager::JobsModel::Ptr m_jobsModel;
 };

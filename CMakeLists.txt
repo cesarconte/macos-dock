@@ -19,6 +19,7 @@ find_package(KF6 6.0 REQUIRED COMPONENTS CoreAddons WindowSystem I18n Config Pac
 find_package(Plasma 6.0 REQUIRED)
 find_package(PlasmaQuick 6.0 REQUIRED)
 find_package(LayerShellQt REQUIRED)
+find_package(LibNotificationManager REQUIRED)
 
 add_executable(macos-dock
     src/main.cpp
@@ -51,6 +52,7 @@ target_link_libraries(macos-dock PRIVATE
     Plasma::Plasma
     Plasma::PlasmaQuick
     LayerShellQt::Interface
+    PW::LibNotificationManager
 )
 
 install(TARGETS macos-dock ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
@@ -74,6 +76,7 @@ if(BUILD_TESTING)
         Qt6::Test
         KF6::ConfigCore
         KF6::Service
+        PW::LibNotificationManager
     )
 
     add_test(NAME test_dockindicatormanager COMMAND test_dockindicatormanager)

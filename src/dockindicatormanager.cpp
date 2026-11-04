@@ -22,6 +22,7 @@ DockIndicatorManager::DockIndicatorManager(QObject *parent)
 {
     initUnityListener();
     initSniListener();
+    initJobsModel();
 }
 
 QString DockIndicatorManager::normalizeKey(const QString &key)
@@ -119,7 +120,7 @@ int DockIndicatorManager::parseBadgeFromText(const QString &text)
 
 int DockIndicatorManager::badgeCount(const QString &appId, const QString &launcherUrl, const QString &title) const
 {
-    // 1. Direct indicator matching (Unity / SNI)
+    // 1. Direct indicator matching (Unity / SNI / Jobs)
     const QString normAppId = normalizeKey(appId);
     if (!normAppId.isEmpty() && m_indicators.contains(normAppId)) {
         const auto &ind = m_indicators.value(normAppId);
@@ -256,8 +257,14 @@ void DockIndicatorManager::clearIndicator(const QString &key)
 
 void DockIndicatorManager::initUnityListener()
 {
+    auto sessionBus = QDBusConnection::sessionBus();
+
+    // Register Unity service and object so Chromium/Brave knows a compatible launcher exists
+    sessionBus.registerObject(QStringLiteral("/Unity"), this, QDBusConnection::ExportAllSlots);
+    sessionBus.registerService(QStringLiteral("com.canonical.Unity"));
+
     // Listen for Unity LauncherEntry Update signals broadcast by Chromium, Brave, Telegram, Thunderbird, etc.
-    QDBusConnection::sessionBus().connect(
+    sessionBus.connect(
         QString(),
         QString(),
         QStringLiteral("com.canonical.Unity.LauncherEntry"),
@@ -367,7 +374,6 @@ void DockIndicatorManager::inspectSniService(const QString &service)
     QString objectPath = QStringLiteral("/StatusNotifierItem");
 
     if (service.startsWith(QLatin1Char('/'))) {
-        // Just an object path without service name; ignore or resolve
         return;
     }
     const int slashIndex = service.indexOf(QLatin1Char('/'));
@@ -400,7 +406,7 @@ void DockIndicatorManager::inspectSniService(const QString &service)
 
     m_sniServiceMap.insert(service, matchedKey);
 
-    auto updateFromToolTip = [this, busName, objectPath, matchedKey, id, title]() {
+    auto updateFromToolTip = [this, busName, objectPath, matchedKey]() {
         QDBusMessage msg = QDBusMessage::createMethodCall(
             busName,
             objectPath,
@@ -467,4 +473,69 @@ void DockIndicatorManager::inspectSniService(const QString &service)
     );
 
     updateFromToolTip();
+}
+
+void DockIndicatorManager::initJobsModel()
+{
+    // Native Plasma Application Jobs Integration (Dolphin, Discover, Browsers, etc.)
+    m_jobsModel = NotificationManager::JobsModel::createJobsModel();
+    if (m_jobsModel) {
+        m_jobsModel->init();
+
+        connect(m_jobsModel.get(), &QAbstractItemModel::rowsInserted, this, &DockIndicatorManager::updateFromJobsModel);
+        connect(m_jobsModel.get(), &QAbstractItemModel::rowsRemoved, this, &DockIndicatorManager::updateFromJobsModel);
+        connect(m_jobsModel.get(), &QAbstractItemModel::dataChanged, this, &DockIndicatorManager::updateFromJobsModel);
+        connect(m_jobsModel.get(), &QAbstractItemModel::modelReset, this, &DockIndicatorManager::updateFromJobsModel);
+
+        updateFromJobsModel();
+    }
+}
+
+void DockIndicatorManager::updateFromJobsModel()
+{
+    if (!m_jobsModel) {
+        return;
+    }
+
+    QSet<QString> currentRunningJobKeys;
+    const int count = m_jobsModel->rowCount();
+
+    for (int i = 0; i < count; ++i) {
+        const QModelIndex idx = m_jobsModel->index(i, 0);
+        const int state = idx.data(NotificationManager::Notifications::JobStateRole).toInt();
+
+        if (state == NotificationManager::Notifications::JobStateRunning
+            || state == NotificationManager::Notifications::JobStateSuspended) {
+            const QString desktopEntry = idx.data(NotificationManager::Notifications::DesktopEntryRole).toString();
+            const QString appName = idx.data(NotificationManager::Notifications::ApplicationNameRole).toString();
+            const int percentage = idx.data(NotificationManager::Notifications::PercentageRole).toInt();
+
+            QString key = normalizeKey(desktopEntry);
+            if (key.isEmpty()) {
+                key = normalizeKey(appName);
+            }
+
+            if (!key.isEmpty()) {
+                currentRunningJobKeys.insert(key);
+
+                IndicatorData data = m_indicators.value(key);
+                data.progress = qBound(0.0, percentage / 100.0, 1.0);
+                data.progressVisible = true;
+                m_indicators.insert(key, data);
+            }
+        }
+    }
+
+    // Clear progress for jobs that have finished or been cancelled
+    for (const QString &oldKey : std::as_const(m_activeJobKeys)) {
+        if (!currentRunningJobKeys.contains(oldKey)) {
+            IndicatorData data = m_indicators.value(oldKey);
+            data.progress = 0.0;
+            data.progressVisible = false;
+            m_indicators.insert(oldKey, data);
+        }
+    }
+
+    m_activeJobKeys = currentRunningJobKeys;
+    Q_EMIT indicatorsChanged();
 }
