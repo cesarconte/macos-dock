@@ -28,6 +28,10 @@ PlasmaCore.PopupPlasmaWindow {
     property string hoveredFileName: ""
     property var hoveredFileSize: 0
     property bool hoveredIsDir: false
+    property real hoveredItemX: 0
+    property real hoveredItemY: 0
+    property real hoveredItemW: 118
+    property real hoveredItemH: 114
 
     function formatFileSize(bytes): string {
         if (!bytes || bytes <= 0) return "";
@@ -229,10 +233,15 @@ PlasmaCore.PopupPlasmaWindow {
 
                     onIsHoveredChanged: {
                         if (isHovered) {
-                            stackDialog.hoveredDelegate = fileItem;
+                            const pt = fileItem.mapToItem(mainContainer, 0, 0);
+                            stackDialog.hoveredItemX = pt.x;
+                            stackDialog.hoveredItemY = pt.y;
+                            stackDialog.hoveredItemW = fileItem.width;
+                            stackDialog.hoveredItemH = fileItem.height;
                             stackDialog.hoveredFileName = fileItem.fileName;
                             stackDialog.hoveredFileSize = fileItem.fileSize;
                             stackDialog.hoveredIsDir = fileItem.fileIsDir;
+                            stackDialog.hoveredDelegate = fileItem;
                         } else if (stackDialog.hoveredDelegate === fileItem) {
                             stackDialog.hoveredDelegate = null;
                         }
@@ -330,7 +339,7 @@ PlasmaCore.PopupPlasmaWindow {
         // Shared macOS Floating Tooltip Overlay (Drawn at top-level outside GridView clipping)
         Rectangle {
             id: hoverTooltipOverlay
-            visible: opacity > 0.0
+            visible: stackDialog.hoveredDelegate !== null || opacity > 0.0
             opacity: (stackDialog.hoveredDelegate !== null) ? 1.0 : 0.0
             z: 9999
 
@@ -345,24 +354,31 @@ PlasmaCore.PopupPlasmaWindow {
                 NumberAnimation { duration: 120 }
             }
 
-            readonly property real itemX: stackDialog.hoveredDelegate ? stackDialog.hoveredDelegate.mapToItem(mainContainer, 0, 0).x : 0
-            readonly property real itemY: stackDialog.hoveredDelegate ? stackDialog.hoveredDelegate.mapToItem(mainContainer, 0, 0).y : 0
-            readonly property real itemW: stackDialog.hoveredDelegate ? stackDialog.hoveredDelegate.width : 0
-            readonly property real itemH: stackDialog.hoveredDelegate ? stackDialog.hoveredDelegate.height : 0
+            Behavior on x {
+                enabled: hoverTooltipOverlay.opacity > 0.5
+                NumberAnimation { duration: 110; easing.type: Easing.OutQuad }
+            }
+
+            Behavior on y {
+                enabled: hoverTooltipOverlay.opacity > 0.5
+                NumberAnimation { duration: 110; easing.type: Easing.OutQuad }
+            }
 
             // Strictly clamped horizontally within mainContainer margins [12, mainContainer.width - width - 12]
             x: {
-                const idealX = itemX + (itemW - width) / 2;
+                const idealX = stackDialog.hoveredItemX + (stackDialog.hoveredItemW - width) / 2;
                 return Math.max(12, Math.min(mainContainer.width - width - 12, idealX));
             }
 
-            // Smart vertical positioning: place above if room, otherwise flip below the item
+            // Smart vertical positioning:
+            // If the item's top edge is within 65px of the header (top row), ALWAYS place below the item.
+            // Otherwise, place above the item.
             y: {
-                const spaceAbove = itemY - headerItem.height;
-                if (spaceAbove >= height + 10) {
-                    return itemY - height - 6;
+                const spaceAbove = stackDialog.hoveredItemY - headerItem.height;
+                if (spaceAbove < 65) {
+                    return Math.min(mainContainer.height - height - 8, stackDialog.hoveredItemY + stackDialog.hoveredItemH + 6);
                 } else {
-                    return Math.min(mainContainer.height - height - 8, itemY + itemH + 6);
+                    return stackDialog.hoveredItemY - height - 6;
                 }
             }
 
