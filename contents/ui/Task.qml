@@ -667,6 +667,7 @@ PlasmaCore.ToolTipArea {
         onTapped: (eventPoint, button) => leftClick()
 
         function leftClick(): void {
+            task.testBounce = false;
             if (task.active) {
                 task.hideToolTip();
             }
@@ -869,9 +870,29 @@ PlasmaCore.ToolTipArea {
 
     property bool testBounce: false
 
+    onIsTaskActiveChanged: {
+        if (isTaskActive) {
+            testBounce = false;
+        }
+    }
+
+    Connections {
+        target: (typeof dockBackend !== "undefined" && dockBackend) ? dockBackend : null
+        function onDownloadFinished(appKey: string): void {
+            if (!task.isTaskActive) {
+                const myKey = (task.appId || "").toLowerCase();
+                const myLauncher = (String(model.LauncherUrlWithoutIcon || "")).toLowerCase();
+                const normAppKey = (appKey || "").toLowerCase();
+                if (normAppKey.length > 0 && (myKey.includes(normAppKey) || normAppKey.includes(myKey) || myLauncher.includes(normAppKey))) {
+                    task.triggerTestBounce();
+                }
+            }
+        }
+    }
+
     Timer {
         id: testBounceTimer
-        interval: 4500
+        interval: 3500
         onTriggered: task.testBounce = false
     }
 

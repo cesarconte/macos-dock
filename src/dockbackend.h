@@ -53,12 +53,16 @@ public Q_SLOTS:
 Q_SIGNALS:
     void trashChanged();
     void indicatorsChanged();
+    void newDownloadItemAdded();
+    void downloadFinished(const QString &appId);
 
 private:
     void checkTrash();
+    void checkDownloads();
 
     QString m_trashFilesPath;
     QString m_downloadsPath;
+    QStringList m_knownDownloadFiles;
     QFileSystemWatcher m_watcher;
     std::function<void()> m_launchpadCallback;
     bool m_isTrashFull = false;

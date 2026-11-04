@@ -189,6 +189,15 @@ PlasmaCore.ToolTipArea {
         bouncing = true;
     }
 
+    Connections {
+        target: DockBackend
+        function onNewDownloadItemAdded(): void {
+            if (specialItem.isDownloads) {
+                specialItem.triggerBounce();
+            }
+        }
+    }
+
     PlasmaComponents3.Menu {
         id: trashContextMenu
 

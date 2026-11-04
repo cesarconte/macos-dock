@@ -46,11 +46,26 @@ DockBackend::DockBackend(QObject *parent)
     m_watcher.addPath(trashInfoPath);
     m_watcher.addPath(trashRootPath);
 
-    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &DockBackend::checkTrash);
+    if (!m_downloadsPath.isEmpty() && QDir(m_downloadsPath).exists()) {
+        m_watcher.addPath(m_downloadsPath);
+        QDir d(m_downloadsPath);
+        m_knownDownloadFiles = d.entryList(QDir::Files | QDir::NoDotAndDotDot);
+    }
+
+    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, [this](const QString &path) {
+        if (path == m_downloadsPath) {
+            checkDownloads();
+        } else {
+            checkTrash();
+        }
+    });
 
     auto timer = new QTimer(this);
     timer->setInterval(2000);
-    connect(timer, &QTimer::timeout, this, &DockBackend::checkTrash);
+    connect(timer, &QTimer::timeout, this, [this]() {
+        checkTrash();
+        checkDownloads();
+    });
     timer->start();
 
     checkTrash();
@@ -60,6 +75,7 @@ DockBackend::DockBackend(QObject *parent)
         m_indicatorsVersion++;
         Q_EMIT indicatorsChanged();
     });
+    connect(m_indicatorManager, &DockIndicatorManager::downloadFinished, this, &DockBackend::downloadFinished);
 }
 
 bool DockBackend::isTrashFull() const
@@ -113,6 +129,41 @@ void DockBackend::checkTrash()
         m_isTrashFull = full;
         m_trashItemCount = count;
         Q_EMIT trashChanged();
+    }
+}
+
+void DockBackend::checkDownloads()
+{
+    if (m_downloadsPath.isEmpty()) {
+        return;
+    }
+
+    QDir dir(m_downloadsPath);
+    if (!dir.exists()) {
+        return;
+    }
+
+    const auto currentFiles = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
+    bool hasNewCompletedDownload = false;
+
+    for (const QString &file : currentFiles) {
+        if (file.endsWith(QLatin1String(".crdownload")) ||
+            file.endsWith(QLatin1String(".part")) ||
+            file.endsWith(QLatin1String(".tmp")) ||
+            file.endsWith(QLatin1String(".download"))) {
+            continue;
+        }
+
+        if (!m_knownDownloadFiles.contains(file)) {
+            hasNewCompletedDownload = true;
+            break;
+        }
+    }
+
+    m_knownDownloadFiles = currentFiles;
+
+    if (hasNewCompletedDownload) {
+        Q_EMIT newDownloadItemAdded();
     }
 }
 

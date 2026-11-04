@@ -64,6 +64,7 @@ void TestDockIndicatorManager::testUnityLauncherProgress()
 {
     DockIndicatorManager manager;
     QSignalSpy spy(&manager, &DockIndicatorManager::indicatorsChanged);
+    QSignalSpy downloadSpy(&manager, &DockIndicatorManager::downloadFinished);
 
     QVariantMap props;
     props.insert(QStringLiteral("progress"), 0.45);
@@ -72,6 +73,7 @@ void TestDockIndicatorManager::testUnityLauncherProgress()
     manager.onUnityLauncherUpdate(QStringLiteral("application://brave-origin.desktop"), props);
 
     QCOMPARE(spy.count(), 1);
+    QCOMPARE(downloadSpy.count(), 0);
     QVERIFY(manager.progressVisible(QStringLiteral("brave-origin"), QStringLiteral("preferred://browser")));
     QCOMPARE(manager.progress(QStringLiteral("brave-origin"), QStringLiteral("preferred://browser")), 0.45);
 
@@ -79,6 +81,8 @@ void TestDockIndicatorManager::testUnityLauncherProgress()
     props[QStringLiteral("progress-visible")] = false;
     manager.onUnityLauncherUpdate(QStringLiteral("application://brave-origin.desktop"), props);
     QVERIFY(!manager.progressVisible(QStringLiteral("brave-origin"), QStringLiteral("preferred://browser")));
+    QCOMPARE(downloadSpy.count(), 1);
+    QCOMPARE(downloadSpy.takeFirst().at(0).toString(), QStringLiteral("brave"));
 }
 
 void TestDockIndicatorManager::testUnityLauncherBadges()

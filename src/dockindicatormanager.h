@@ -57,6 +57,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void indicatorsChanged();
+    void downloadFinished(const QString &appId);
 
 private:
     void initUnityListener();

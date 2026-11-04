@@ -188,7 +188,7 @@ PlasmaCore.PopupPlasmaWindow {
 
                         required property string fileName
                         required property string filePath
-                        required property url fileURL
+                        required property url fileUrl
                         required property bool fileIsDir
 
                         Rectangle {
@@ -211,7 +211,7 @@ PlasmaCore.PopupPlasmaWindow {
 
                             Kirigami.Icon {
                                 id: fileIcon
-                                source: fileItem.fileIsDir ? "folder" : fileItem.fileURL
+                                source: fileItem.fileIsDir ? "folder" : fileItem.fileUrl
                                 implicitWidth: 44
                                 implicitHeight: 44
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -238,7 +238,7 @@ PlasmaCore.PopupPlasmaWindow {
 
                         TapHandler {
                             onTapped: {
-                                DockBackend.openUrl(fileItem.fileURL);
+                                DockBackend.openUrl(fileItem.fileUrl);
                                 stackDialog.visible = false;
                             }
                         }

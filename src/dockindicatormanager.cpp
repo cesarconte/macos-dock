@@ -310,6 +310,7 @@ void DockIndicatorManager::onUnityLauncherUpdate(const QString &appUri, const QM
 
     const QString normKey = normalizeKey(appUri);
     IndicatorData data = m_indicators.value(normKey);
+    const bool wasDownloading = data.progressVisible && data.progress > 0.0;
 
     if (properties.contains(QStringLiteral("count"))) {
         data.badgeCount = properties.value(QStringLiteral("count")).toInt();
@@ -337,6 +338,12 @@ void DockIndicatorManager::onUnityLauncherUpdate(const QString &appUri, const QM
 
     m_indicators.insert(normKey, data);
     Q_EMIT indicatorsChanged();
+
+    const bool isDownloading = data.progressVisible && data.progress > 0.0;
+    if (wasDownloading && !isDownloading) {
+        qDebug() << "DockIndicatorManager: Download completed for" << normKey;
+        Q_EMIT downloadFinished(normKey);
+    }
 }
 
 void DockIndicatorManager::initSniListener()
