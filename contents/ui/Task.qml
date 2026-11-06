@@ -51,8 +51,8 @@ PlasmaCore.ToolTipArea {
         : 0.0
 
     readonly property bool isPinned: Boolean(model.IsLauncher || (model.LauncherUrlWithoutIcon && tasksRoot && tasksRoot.hasLauncher(model.LauncherUrlWithoutIcon)))
-    readonly property bool isDividerTask: false
-    readonly property int dividerOffset: 0
+    readonly property bool isDividerTask: Boolean(tasksRoot && tasksRoot.hasDivider && tasksRoot.firstUnpinnedIndex === index)
+    readonly property int dividerOffset: isDividerTask ? (tasksRoot ? tasksRoot.dividerSpan : 12) : 0
     readonly property bool isLaunchpad: Boolean((model.LauncherUrlWithoutIcon && String(model.LauncherUrlWithoutIcon).indexOf("launchpad") !== -1)
         || (model.AppId && String(model.AppId).indexOf("launchpad") !== -1))
 
@@ -1085,7 +1085,7 @@ PlasmaCore.ToolTipArea {
 
     Rectangle {
         id: dockDivider
-        visible: false
+        visible: isDividerTask
         z: -1
 
         width: tasksRoot.vertical ? Math.round(tasksRoot.iconSize * 0.55) : 1

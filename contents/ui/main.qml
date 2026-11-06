@@ -224,9 +224,12 @@ PlasmoidItem {
         ? (iconSize + horizontalPadding * 2 + elevation)
         : (iconSize + verticalPadding * 2 + elevation)
 
-    readonly property int dividerSpan: 16
+    readonly property int dividerSpan: Math.max(12, effectiveIconSpacing + 1)
 
     readonly property int firstUnpinnedIndex: {
+        if (tasksModel.launcherCount > 0 && tasksModel.count > tasksModel.launcherCount) {
+            return tasksModel.launcherCount;
+        }
         for (let i = 0; i < taskRepeater.count; ++i) {
             const item = taskRepeater.itemAt(i) as Task;
             if (item && item.model && !item.isPinned) {
@@ -236,7 +239,7 @@ PlasmoidItem {
         return -1;
     }
 
-    readonly property bool hasDivider: false
+    readonly property bool hasDivider: firstUnpinnedIndex > 0
 
     readonly property real screenAvailableLength: {
         let fullLength = 0;
