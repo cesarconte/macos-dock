@@ -97,7 +97,7 @@ void DockCorona::init()
             QStringLiteral("applications:org.cesar.kphone.desktop"),
             QStringLiteral("applications:proton-calendar.desktop"),
             QStringLiteral("applications:org.kde.kaddressbook.desktop"),
-            QStringLiteral("applications:recordatorios.desktop"),
+            QStringLiteral("applications:org.cesar.kreminders.desktop"),
             QStringLiteral("applications:org.cesar.kquicknote.desktop"),
             QStringLiteral("applications:mpv.desktop"),
             QStringLiteral("applications:org.kde.audiotube.desktop"),
