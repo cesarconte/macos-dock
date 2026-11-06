@@ -43,6 +43,11 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
+
+Q_SIGNALS:
+    void surfaceDismissed();
 
 public Q_SLOTS:
     void updateMask();

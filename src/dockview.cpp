@@ -49,7 +49,7 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
         m_layerWindow->setExclusiveZone(56);
         m_layerWindow->setDesiredSize(QSize(0, m_dockCanvasHeight));
         m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
-        m_layerWindow->setCloseOnDismissed(false);
+        m_layerWindow->setCloseOnDismissed(true);
     }
 
     adaptToScreen();
@@ -96,7 +96,12 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
     watchdogTimer->start();
 }
 
-DockView::~DockView() = default;
+DockView::~DockView()
+{
+    if (m_appletInterface) {
+        m_appletInterface->setParentItem(nullptr);
+    }
+}
 
 void DockView::setApplet(Plasma::Applet *applet)
 {
@@ -185,6 +190,20 @@ void DockView::showEvent(QShowEvent *event)
     updateScreenGeometry();
 }
 
+void DockView::hideEvent(QHideEvent *event)
+{
+    QQuickView::hideEvent(event);
+    qDebug() << "DockView: hideEvent triggered";
+    Q_EMIT surfaceDismissed();
+}
+
+void DockView::closeEvent(QCloseEvent *event)
+{
+    QQuickView::closeEvent(event);
+    qDebug() << "DockView: closeEvent triggered (surface dismissed by compositor)";
+    Q_EMIT surfaceDismissed();
+}
+
 void DockView::onPrepareForSleep(bool sleeping)
 {
     if (!sleeping) {
@@ -234,7 +253,7 @@ void DockView::adaptToScreen()
         m_layerWindow->setDesiredSize(QSize(targetScreen->geometry().width(), m_dockCanvasHeight));
         m_layerWindow->setLayer(LayerShellQt::Window::LayerTop);
         m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
-        m_layerWindow->setCloseOnDismissed(false);
+        m_layerWindow->setCloseOnDismissed(true);
     }
 
     updateScreenGeometry();

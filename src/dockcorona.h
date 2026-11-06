@@ -27,6 +27,9 @@ public:
     void showConfigurationInterface();
 
 public Q_SLOTS:
+    void recreateView();
+    void onPrepareForSleep(bool sleeping);
+    void onScreenSaverActiveChanged(bool active);
     void toggleLaunchpad();
     void openTrash();
     void emptyTrash();

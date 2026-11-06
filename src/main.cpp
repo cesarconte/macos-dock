@@ -35,6 +35,7 @@ int main(int argc, char **argv)
     qputenv("QT_WAYLAND_DISABLE_FIXED_POSITIONS", "1");
 
     QApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);
 
     qmlRegisterSingletonInstance<DockBackend>("org.cesar.dock", 1, 0, "DockBackend", DockBackend::instance());
 
