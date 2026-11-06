@@ -94,13 +94,12 @@ void DockCorona::init()
             QStringLiteral("applications:brave-mnhkaebcjjhencmpkapnbdaogjamfbcj-Default.desktop"),
             QStringLiteral("applications:org.kde.gwenview.desktop"),
             QStringLiteral("applications:brave-hnpfjngllnobngcgfapefoaidbinmjnm-Default.desktop"),
+            QStringLiteral("applications:org.cesar.kphone.desktop"),
             QStringLiteral("applications:org.kde.korganizer.desktop"),
             QStringLiteral("applications:org.cesar.kquicknote.desktop"),
-            QStringLiteral("applications:org.cesar.kvoicememos.desktop"),
             QStringLiteral("applications:mpv.desktop"),
-            QStringLiteral("applications:antigravity.desktop"),
-            QStringLiteral("applications:org.cesar.kdropover.desktop"),
-            QStringLiteral("applications:org.kde.konsole.desktop"),
+            QStringLiteral("applications:org.kde.audiotube.desktop"),
+            QStringLiteral("applications:org.cesar.kphonemirroring.desktop"),
             QStringLiteral("applications:systemsettings.desktop")
         };
 
