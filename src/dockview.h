@@ -52,6 +52,7 @@ Q_SIGNALS:
 public Q_SLOTS:
     void updateMask();
     void updateExclusiveZone();
+    void updateLayerWindow();
     void updateScreenGeometry();
     void adaptToScreen();
     void onPrepareForSleep(bool sleeping);

@@ -44,11 +44,10 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
     if (m_layerWindow) {
         m_layerWindow->setScope(QStringLiteral("macos-dock"));
         m_layerWindow->setLayer(LayerShellQt::Window::LayerTop);
-        m_layerWindow->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
-        m_layerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
         m_layerWindow->setDesiredSize(QSize(0, m_dockCanvasHeight));
         m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
         m_layerWindow->setCloseOnDismissed(true);
+        updateLayerWindow();
         updateExclusiveZone();
     }
 
@@ -276,12 +275,11 @@ void DockView::adaptToScreen()
 
     if (m_layerWindow) {
         m_layerWindow->setScreen(targetScreen);
-        m_layerWindow->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
-        m_layerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
         m_layerWindow->setDesiredSize(QSize(targetScreen->geometry().width(), m_dockCanvasHeight));
         m_layerWindow->setLayer(LayerShellQt::Window::LayerTop);
         m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
         m_layerWindow->setCloseOnDismissed(true);
+        updateLayerWindow();
         updateExclusiveZone();
     }
 
@@ -356,6 +354,22 @@ void DockView::updateMask()
     setMask(QRegion(maskX, 0, maskW, totalH));
 }
 
+void DockView::updateLayerWindow()
+{
+    if (!m_layerWindow) {
+        return;
+    }
+    // Centralized layer-shell anchor setup (ported from Plasma PanelView::updateLayerWindow).
+    // Dock is always a bottom horizontal panel: anchor bottom + left + right (Fitts law).
+    LayerShellQt::Window::Anchors anchors;
+    anchors.setFlag(LayerShellQt::Window::AnchorBottom);
+    anchors.setFlag(LayerShellQt::Window::AnchorLeft);
+    anchors.setFlag(LayerShellQt::Window::AnchorRight);
+    m_layerWindow->setAnchors(anchors);
+    m_layerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
+    m_layerWindow->setMargins(QMargins(0, 0, 0, 0));
+}
+
 void DockView::updateExclusiveZone()
 {
     if (!m_layerWindow) {
@@ -382,5 +396,4 @@ void DockView::updateExclusiveZone()
 
     m_layerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
     m_layerWindow->setExclusiveZone(zone);
-    qDebug() << "DockView: updated exclusiveZone to" << zone;
 }
