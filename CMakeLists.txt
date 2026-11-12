@@ -21,6 +21,7 @@ find_package(Qt6 6.6 REQUIRED COMPONENTS Core Gui Widgets Quick Qml DBus Test)
 find_package(KF6 6.0 REQUIRED COMPONENTS CoreAddons WindowSystem I18n Config Package DBusAddons KIO Service)
 find_package(Plasma 6.0 REQUIRED)
 find_package(PlasmaQuick 6.0 REQUIRED)
+find_package(CachyOSUITesting REQUIRED)
 find_package(LayerShellQt REQUIRED)
 find_package(LibNotificationManager REQUIRED)
 
@@ -95,4 +96,47 @@ if(BUILD_TESTING)
     )
 
     add_test(NAME test_dockindicatormanager COMMAND test_dockindicatormanager)
+
+    add_executable(test_layout_audit
+        tests/test_layout_audit.cpp
+        src/dockcorona.cpp
+        src/dockcorona.h
+        src/dockview.cpp
+        src/dockview.h
+        src/dockbackend.cpp
+        src/dockbackend.h
+        src/dockindicatormanager.cpp
+        src/dockindicatormanager.h
+    )
+
+    target_include_directories(test_layout_audit PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+
+    target_link_libraries(test_layout_audit PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Quick
+        Qt6::Qml
+        Qt6::DBus
+        Qt6::Test
+        KF6::CoreAddons
+        KF6::WindowSystem
+        KF6::ConfigCore
+        KF6::Package
+        KF6::DBusAddons
+        KF6::Service
+        KF6::KIOCore
+        KF6::KIOGui
+        Plasma::Plasma
+        Plasma::PlasmaQuick
+        LayerShellQt::Interface
+        PW::LibNotificationManager
+        CachyOSUITesting::CachyOSUITesting
+    )
+
+    add_test(NAME test_layout_audit COMMAND test_layout_audit)
+    set_tests_properties(test_layout_audit PROPERTIES
+        ENVIRONMENT "CACHYOS_UI_IMPORT_PATH=$ENV{HOME}/.local/lib/qt6/qml"
+    )
 endif()
