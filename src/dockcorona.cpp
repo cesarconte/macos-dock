@@ -71,7 +71,7 @@ void DockCorona::init()
     }
 
     if (!appletPtr) {
-        auto a = Plasma::PluginLoader::self()->loadApplet(QStringLiteral("com.cesar.macosdock"), 0, {});
+        auto a = Plasma::PluginLoader::self()->loadApplet(QStringLiteral("com.cesar.cachyosdock"), 0, {});
         if (a) {
             appletPtr = a.get();
             a->setParent(this);
@@ -99,6 +99,7 @@ void DockCorona::init()
             QStringLiteral("applications:org.cesar.kreminders.desktop"),
             QStringLiteral("applications:org.cesar.kquicknote.desktop"),
             QStringLiteral("applications:mpv.desktop"),
+            QStringLiteral("applications:apple-tv.desktop"),
             QStringLiteral("applications:org.kde.audiotube.desktop"),
             QStringLiteral("applications:com.shellyorg.shelly.desktop"),
             QStringLiteral("applications:org.cesar.kphonemirroring.desktop"),

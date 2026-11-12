@@ -96,6 +96,69 @@ PlasmoidItem {
     readonly property real dockCapsuleHeight: tmf ? tmf.height : tasks.height
     readonly property real dockCapsuleY: tmf ? tmf.y : 0
 
+    // Visibility mode: 0 = Always visible, 1 = Auto hide, 2 = Dodge windows, 3 = Windows go below
+    readonly property int visibilityMode: Plasmoid.configuration.visibilityMode !== undefined
+        ? Plasmoid.configuration.visibilityMode
+        : 0
+
+    property bool isMouseOverDock: false
+    property bool isDockHidden: false
+
+    readonly property bool isMenuOrPopupOpen: Boolean(
+        (toolTipAreaItem && toolTipAreaItem.toolTipOpen) ||
+        (groupDialog && groupDialog.visible)
+    )
+
+    readonly property bool hasIntersectingWindow: visibilityMode === 2 && visibleWindowsModel.count > 0
+
+    TaskManager.TasksModel {
+        id: visibleWindowsModel
+        filterByCurrentVirtualDesktop: true
+        filterByActivity: true
+        filterByScreen: true
+        filterByRegion: TaskManager.RegionFilterMode.Intersect
+        filterHidden: true
+        filterMinimized: true
+        screenGeometry: Plasmoid.containment ? Plasmoid.containment.screenGeometry : Qt.rect(0, 0, 1920, 1080)
+        regionGeometry: Qt.rect(tasks.x + (tmf ? tmf.x : 0), tasks.y + (tmf ? tmf.y : 0), tmf ? tmf.width : tasks.width, tmf ? tmf.height : tasks.height)
+    }
+
+    readonly property bool shouldHideDock: {
+        if (visibilityMode === 1) {
+            return !isMouseOverDock && !isMenuOrPopupOpen;
+        } else if (visibilityMode === 2) {
+            return hasIntersectingWindow && !isMouseOverDock && !isMenuOrPopupOpen;
+        }
+        return false;
+    }
+
+    onShouldHideDockChanged: {
+        if (!shouldHideDock) {
+            isDockHidden = false;
+            maskShrinkTimer.stop();
+        } else {
+            maskShrinkTimer.restart();
+        }
+    }
+
+    Timer {
+        id: maskShrinkTimer
+        interval: 240
+        onTriggered: {
+            if (tasks.shouldHideDock) {
+                tasks.isDockHidden = true;
+            }
+        }
+    }
+
+    Timer {
+        id: hideDebounceTimer
+        interval: 350
+        onTriggered: {
+            tasks.isMouseOverDock = false;
+        }
+    }
+
     preferredRepresentation: fullRepresentation
 
     readonly property int preferredIconSize: Plasmoid.configuration.iconSize || 48
@@ -814,6 +877,48 @@ PlasmoidItem {
 
             LayoutMirroring.enabled: tasks.shouldBeMirrored(Plasmoid.configuration.reverseMode, Application.layoutDirection, tasks.vertical)
 
+            HoverHandler {
+                id: capsuleHoverHandler
+                onHoveredChanged: {
+                    if (hovered) {
+                        hideDebounceTimer.stop();
+                        tasks.isMouseOverDock = true;
+                    } else {
+                        hideDebounceTimer.restart();
+                    }
+                }
+            }
+
+            transform: Translate {
+                id: dockHideTranslate
+                readonly property real hideDistance: tmf.height + tasks.elevation + 30
+                readonly property real hideDistanceH: tmf.width + tasks.elevation + 30
+
+                y: {
+                    if (!tasks.isDockHidden) return 0;
+                    if (tasks.vertical) return 0;
+                    return tasks.effectiveLocation === PlasmaCore.Types.TopEdge ? -hideDistance : hideDistance;
+                }
+                x: {
+                    if (!tasks.isDockHidden) return 0;
+                    if (!tasks.vertical) return 0;
+                    return tasks.effectiveLocation === PlasmaCore.Types.LeftEdge ? -hideDistanceH : hideDistanceH;
+                }
+
+                Behavior on y {
+                    NumberAnimation {
+                        duration: 220
+                        easing.type: tasks.isDockHidden ? Easing.InQuad : Easing.OutCubic
+                    }
+                }
+                Behavior on x {
+                    NumberAnimation {
+                        duration: 220
+                        easing.type: tasks.isDockHidden ? Easing.InQuad : Easing.OutCubic
+                    }
+                }
+            }
+
             width: tasks.vertical ? (tasks.iconSize + tasks.horizontalPadding * 2) : (dockContent.width + tasks.horizontalPadding * 2)
             height: tasks.vertical ? (dockContent.height + tasks.verticalPadding * 2) : (tasks.iconSize + tasks.verticalPadding * 2)
 
@@ -830,7 +935,7 @@ PlasmoidItem {
                 rightMargin: (tasks.vertical && tasks.effectiveLocation === PlasmaCore.Types.RightEdge) ? (tasks.elevation - tasks.panelRightInset) : 0
             }
 
-            // macOS dock capsule background (Solid, Transparent, Translucent, System Blur, or Liquid Glass)
+            // Dock capsule background (Solid, Transparent, Translucent, System Blur, or Liquid Glass)
             LiquidGlassBackground {
                 id: dockBackground
                 anchors.fill: parent
@@ -895,7 +1000,7 @@ PlasmoidItem {
                     anchors.horizontalCenter: tasks.vertical ? parent.horizontalCenter : undefined
                     spacing: tasks.iconSpacing
 
-                    // macOS Dock permanent divider
+                    // Dock permanent divider
                     Rectangle {
                         width: tasks.vertical ? Math.round(tasks.iconSize * 0.55) : 1
                         height: !tasks.vertical ? Math.round(tasks.iconSize * 0.55) : 1
@@ -927,6 +1032,26 @@ PlasmoidItem {
                             ? "user-trash-full"
                             : "user-trash"
                         isTrash: true
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: bottomEdgeTrigger
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 6
+            z: 9999
+
+            HoverHandler {
+                id: bottomEdgeHoverHandler
+                enabled: tasks.shouldHideDock || tasks.isDockHidden
+                onHoveredChanged: {
+                    if (hovered) {
+                        hideDebounceTimer.stop();
+                        tasks.isMouseOverDock = true;
                     }
                 }
             }

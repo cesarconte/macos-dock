@@ -28,7 +28,7 @@ Item {
         z: 0
     }
 
-    // macOS Apple Red Pill
+    // Notification badge pill
     Rectangle {
         id: bg
         anchors.fill: parent
@@ -49,7 +49,7 @@ Item {
             color: "#FFFFFF"
             font.bold: true
             font.pixelSize: Math.max(8, Math.round(badgeRect.height * 0.58))
-            font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
+            font.family: "Cantarell, Noto Sans, sans-serif"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             text: {

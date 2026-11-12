@@ -970,9 +970,9 @@ PlasmaCore.ToolTipArea {
         }
     }
 
-    // macOS Golden Gate active application reflection / spotlight glow
+    // Active application reflection / glow
     Rectangle {
-        id: activeSpotlight
+        id: activeGlow
         visible: !task.inPopup && task.isTaskActive
         z: -1
         width: Math.round(tasksRoot.iconSize * 0.72)

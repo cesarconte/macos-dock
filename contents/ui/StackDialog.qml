@@ -88,7 +88,7 @@ PlasmaCore.PopupPlasmaWindow {
                     text: i18n("Descargas")
                     font.bold: true
                     font.pixelSize: 14
-                    font.family: "SF Pro Display, -apple-system, Cantarell, Noto Sans, sans-serif"
+                    font.family: "Cantarell, Noto Sans, sans-serif"
                     color: Kirigami.Theme.textColor
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -306,7 +306,7 @@ PlasmaCore.PopupPlasmaWindow {
                             horizontalAlignment: Text.AlignHCenter
                             font.pixelSize: 11
                             font.weight: fileItem.isHovered ? Font.Medium : Font.Normal
-                            font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
+                            font.family: "Cantarell, Noto Sans, sans-serif"
                             color: Kirigami.Theme.textColor
                             elide: Text.ElideMiddle
                             maximumLineCount: 2
@@ -336,7 +336,7 @@ PlasmaCore.PopupPlasmaWindow {
             }
         }
 
-        // Shared macOS Floating Tooltip Overlay (Drawn at top-level outside GridView clipping)
+        // Shared floating tooltip overlay (drawn at top-level outside GridView clipping)
         Rectangle {
             id: hoverTooltipOverlay
             visible: stackDialog.hoveredDelegate !== null || opacity > 0.0
@@ -394,7 +394,7 @@ PlasmaCore.PopupPlasmaWindow {
                     horizontalAlignment: Text.AlignHCenter
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
-                    font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
+                    font.family: "Cantarell, Noto Sans, sans-serif"
                     color: "#FFFFFF"
                     elide: Text.ElideMiddle
                     maximumLineCount: 3
@@ -407,7 +407,7 @@ PlasmaCore.PopupPlasmaWindow {
                     width: parent.width
                     horizontalAlignment: Text.AlignHCenter
                     font.pixelSize: 10
-                    font.family: "SF Pro Text, -apple-system, Cantarell, Noto Sans, sans-serif"
+                    font.family: "Cantarell, Noto Sans, sans-serif"
                     color: Qt.rgba(1, 1, 1, 0.65)
                 }
             }

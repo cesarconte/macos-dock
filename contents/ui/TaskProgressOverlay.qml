@@ -11,7 +11,7 @@ Item {
 
     readonly property real progressVal: (typeof task !== "undefined" && task) ? task.taskProgress : 0.0
 
-    // macOS Progress Pill Track
+    // Progress pill track
     Rectangle {
         id: track
         anchors.horizontalCenter: parent.horizontalCenter

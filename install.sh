@@ -2,7 +2,7 @@
 set -e
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLASMOID_DEST="$HOME/.local/share/plasma/plasmoids/com.cesar.macosdock"
+PLASMOID_DEST="$HOME/.local/share/plasma/plasmoids/com.cesar.cachyosdock"
 BIN_DEST="$HOME/.local/bin"
 
 echo "==> Compilando ejecutable nativo macos-dock (C++ / LayerShellQt)..."

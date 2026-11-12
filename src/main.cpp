@@ -41,12 +41,12 @@ int main(int argc, char **argv)
 
     app.setApplicationVersion(QStringLiteral("1.0.0"));
     app.setOrganizationDomain(QStringLiteral("cesar.org"));
-    app.setApplicationName(QStringLiteral("macos-dock"));
-    app.setDesktopFileName(QStringLiteral("com.cesar.macosdock"));
+    app.setApplicationName(QStringLiteral("cachyos-dock"));
+    app.setDesktopFileName(QStringLiteral("com.cesar.cachyosdock"));
     KLocalizedString::setApplicationDomain(QByteArrayLiteral("macos-dock"));
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(i18n("macOS Golden Gate Dock for KDE Plasma 6 (Wayland)"));
+    parser.setApplicationDescription(i18n("Dock for KDE Plasma 6 (Wayland)"));
     parser.addHelpOption();
     parser.addVersionOption();
 

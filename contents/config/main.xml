@@ -22,6 +22,16 @@
       <label>Whether to show only window tasks that are minmized.</label>
       <default>false</default>
     </entry>
+    <entry name="visibilityMode" type="Enum">
+      <label>Visibility mode for the dock: 0 = Always visible, 1 = Auto hide, 2 = Dodge windows, 3 = Windows go below</label>
+      <choices>
+        <choice name="AlwaysVisible"/>
+        <choice name="AutoHide"/>
+        <choice name="DodgeWindows"/>
+        <choice name="WindowsGoBelow"/>
+      </choices>
+      <default>0</default>
+    </entry>
     <entry name="unhideOnAttention" type="Bool">
       <label>Whether to unhide if a window wants attention.</label>
       <default>true</default>

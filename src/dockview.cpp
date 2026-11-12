@@ -46,10 +46,10 @@ DockView::DockView(Plasma::Corona *corona, QWindow *parent)
         m_layerWindow->setLayer(LayerShellQt::Window::LayerTop);
         m_layerWindow->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
         m_layerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
-        m_layerWindow->setExclusiveZone(56);
         m_layerWindow->setDesiredSize(QSize(0, m_dockCanvasHeight));
         m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
         m_layerWindow->setCloseOnDismissed(true);
+        updateExclusiveZone();
     }
 
     adaptToScreen();
@@ -128,6 +128,7 @@ void DockView::setApplet(Plasma::Applet *applet)
     m_appletInterface->setProperty("hideOnWindowDeactivate", false);
 
     const auto updateMaskMethod = metaObject()->method(metaObject()->indexOfSlot("updateMask()"));
+    const auto updateZoneMethod = metaObject()->method(metaObject()->indexOfSlot("updateExclusiveZone()"));
 
     // Track dock capsule bounds to set accurate input mask
     const auto metaObj = m_appletInterface->metaObject();
@@ -146,6 +147,34 @@ void DockView::setApplet(Plasma::Applet *applet)
             connect(m_appletInterface.data(), prop.notifySignal(), this, updateMaskMethod);
         }
     }
+
+    // Dynamically track dock thickness (iconSize + verticalPadding * 2 + elevation)
+    // so maximized windows stop cleanly above the dock capsule without overlapping
+    const int thicknessIdx = metaObj->indexOfProperty("targetThickness");
+    if (thicknessIdx >= 0) {
+        const auto prop = metaObj->property(thicknessIdx);
+        if (prop.hasNotifySignal()) {
+            connect(m_appletInterface.data(), prop.notifySignal(), this, updateZoneMethod);
+        }
+    }
+
+    const int visModeIdx = metaObj->indexOfProperty("visibilityMode");
+    if (visModeIdx >= 0) {
+        const auto prop = metaObj->property(visModeIdx);
+        if (prop.hasNotifySignal()) {
+            connect(m_appletInterface.data(), prop.notifySignal(), this, updateZoneMethod);
+        }
+    }
+
+    const int hiddenIdx = metaObj->indexOfProperty("isDockHidden");
+    if (hiddenIdx >= 0) {
+        const auto prop = metaObj->property(hiddenIdx);
+        if (prop.hasNotifySignal()) {
+            connect(m_appletInterface.data(), prop.notifySignal(), this, updateMaskMethod);
+        }
+    }
+
+    updateExclusiveZone();
 
     if (applet->containment()) {
         connect(applet->containment(), &Plasma::Containment::configureRequested, this, [this](Plasma::Applet *a) {
@@ -249,11 +278,11 @@ void DockView::adaptToScreen()
         m_layerWindow->setScreen(targetScreen);
         m_layerWindow->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
         m_layerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
-        m_layerWindow->setExclusiveZone(56);
         m_layerWindow->setDesiredSize(QSize(targetScreen->geometry().width(), m_dockCanvasHeight));
         m_layerWindow->setLayer(LayerShellQt::Window::LayerTop);
         m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
         m_layerWindow->setCloseOnDismissed(true);
+        updateExclusiveZone();
     }
 
     updateScreenGeometry();
@@ -298,6 +327,17 @@ void DockView::updateMask()
         return;
     }
 
+    const int totalH = height() > 0 ? height() : m_dockCanvasHeight;
+    const QVariant hiddenVar = m_appletInterface->property("isDockHidden");
+    const bool isHidden = hiddenVar.isValid() && hiddenVar.toBool();
+
+    if (isHidden) {
+        // Thin trigger zone at the very bottom edge of the screen
+        const int triggerHeight = 4;
+        setMask(QRegion(0, totalH - triggerHeight, width() > 0 ? width() : 1920, triggerHeight));
+        return;
+    }
+
     const QVariant wVar = m_appletInterface->property("dockCapsuleWidth");
     const QVariant xVar = m_appletInterface->property("dockCapsuleX");
     if (!wVar.isValid() || !xVar.isValid() || wVar.toReal() <= 0) {
@@ -312,7 +352,35 @@ void DockView::updateMask()
     const int margin = 80;
     const int maskX = qMax(0, capsuleX - margin);
     const int maskW = capsuleW + margin * 2;
-    const int maskH = height() > 0 ? height() : m_dockCanvasHeight;
 
-    setMask(QRegion(maskX, 0, maskW, maskH));
+    setMask(QRegion(maskX, 0, maskW, totalH));
+}
+
+void DockView::updateExclusiveZone()
+{
+    if (!m_layerWindow) {
+        return;
+    }
+
+    int zone = 74; // Fallback: 48 (icon) + 12 (verticalPadding*2) + 12 (elevation) + 2 (breathing gap)
+    if (m_appletInterface) {
+        const QVariant visModeVar = m_appletInterface->property("visibilityMode");
+        const int visMode = visModeVar.isValid() ? visModeVar.toInt() : 0;
+
+        if (visMode == 0) { // AlwaysVisible
+            const QVariant thicknessVar = m_appletInterface->property("targetThickness");
+            if (thicknessVar.isValid() && thicknessVar.toInt() > 0) {
+                // targetThickness represents (iconSize + verticalPadding * 2 + elevation).
+                // Add a subtle 2px breathing gap so maximized window frames sit cleanly above the glass border without clipping.
+                zone = thicknessVar.toInt() + 2;
+            }
+        } else {
+            // AutoHide (1), DodgeWindows (2), WindowsGoBelow (3) do NOT reserve space
+            zone = 0;
+        }
+    }
+
+    m_layerWindow->setExclusiveEdge(LayerShellQt::Window::AnchorBottom);
+    m_layerWindow->setExclusiveZone(zone);
+    qDebug() << "DockView: updated exclusiveZone to" << zone;
 }

@@ -8,12 +8,12 @@
             }
         ],
         "Category": "Windows and Tasks",
-        "Description": "High-fidelity macOS Golden Gate Dock with magnification and liquid glass for KDE Plasma 6.8 (Wayland)",
+        "Description": "High-fidelity dock with magnification and liquid glass for KDE Plasma 6 (Wayland)",
         "EnabledByDefault": true,
         "Icon": "preferences-system-windows",
-        "Id": "com.cesar.macosdock",
+        "Id": "com.cesar.cachyosdock",
         "License": "GPL-2.0-or-later",
-        "Name": "macOS Dock (Golden Gate)",
+        "Name": "CachyOS Dock",
         "Version": "1.0.0",
         "Website": "https://github.com/cesar/macos-dock"
     },

@@ -39,6 +39,7 @@ KCMUtils.SimpleKCM {
     property alias cfg_minimizeActiveTaskOnClick: minimizeActive.checked
     property alias cfg_unhideOnAttention: unhideOnAttention.checked
     property alias cfg_reverseMode: reverseMode.checked
+    property alias cfg_visibilityMode: visibilityMode.currentIndex
 
     headerPaddingEnabled: false
     header: ColumnLayout {
@@ -226,7 +227,28 @@ KCMUtils.SimpleKCM {
         }
 
         // ==========================================
-        // 4. PANEL & LAYOUT DIRECTION
+        // 4. VISIBILITY
+        // ==========================================
+        Item {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18ndc("plasma_shell_org.kde.plasma.desktop", "@title:group", "Visibility")
+        }
+
+        QQC2.ComboBox {
+            id: visibilityMode
+            Kirigami.FormData.label: i18ndc("plasma_shell_org.kde.plasma.desktop", "@label:listbox", "Visibility:")
+            Layout.fillWidth: true
+            Layout.minimumWidth: Kirigami.Units.gridUnit * 14
+            model: [
+                i18ndc("plasma_shell_org.kde.plasma.desktop", "@item:inlistbox", "Always visible"),
+                i18ndc("plasma_shell_org.kde.plasma.desktop", "@item:inlistbox", "Auto hide"),
+                i18ndc("plasma_shell_org.kde.plasma.desktop", "@item:inlistbox", "Dodge windows"),
+                i18ndc("plasma_shell_org.kde.plasma.desktop", "@item:inlistbox", "Windows go below")
+            ]
+        }
+
+        // ==========================================
+        // 5. PANEL & LAYOUT DIRECTION
         // ==========================================
         Item {
             Kirigami.FormData.isSection: true

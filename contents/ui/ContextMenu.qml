@@ -151,7 +151,7 @@ PlasmaExtras.Menu {
             menu.addMenuItem(newWinItem, startNewInstanceItem);
             menu.addMenuItem(newSeparator(menu), startNewInstanceItem);
 
-            // 3. Lugares de macOS / Ubicaciones
+            // 3. Ubicaciones
             let placesHeader = newMenuItem(menu);
             placesHeader.text = i18n("Ubicaciones");
             placesHeader.section = true;
