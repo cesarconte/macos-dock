@@ -65,6 +65,7 @@ private:
     LayerShellQt::Window *m_layerWindow = nullptr;
     DockBackend *m_backend = nullptr;
     int m_dockCanvasHeight = 128;
+QRegion m_lastMaskRegion;
     QMetaObject::Connection m_screenGeometryConnection;
     QMetaObject::Connection m_screenResolutionConnection;
 };

@@ -332,7 +332,12 @@ void DockView::updateMask()
     if (isHidden) {
         // Thin trigger zone at the very bottom edge of the screen
         const int triggerHeight = 4;
-        setMask(QRegion(0, totalH - triggerHeight, width() > 0 ? width() : 1920, triggerHeight));
+        QRegion triggerMask(0, totalH - triggerHeight, width() > 0 ? width() : 1920, triggerHeight);
+        if (triggerMask == m_lastMaskRegion) {
+            return;
+        }
+        m_lastMaskRegion = triggerMask;
+        setMask(triggerMask);
         return;
     }
 
@@ -351,7 +356,12 @@ void DockView::updateMask()
     const int maskX = qMax(0, capsuleX - margin);
     const int maskW = capsuleW + margin * 2;
 
-    setMask(QRegion(maskX, 0, maskW, totalH));
+    QRegion capsuleMask(maskX, 0, maskW, totalH);
+    if (capsuleMask == m_lastMaskRegion) {
+        return;
+    }
+    m_lastMaskRegion = capsuleMask;
+    setMask(capsuleMask);
 }
 
 void DockView::updateLayerWindow()
