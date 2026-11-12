@@ -4,8 +4,6 @@
 */
 
 import QtQuick
-import org.kde.plasma.components as PlasmaComponents3
-import org.kde.kirigami as Kirigami
 
 Item {
     id: badgeRect

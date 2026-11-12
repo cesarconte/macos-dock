@@ -19,6 +19,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.plasma.extras as PlasmaExtras
 import org.kde.kirigami as Kirigami
+import CachyOS.UI as Cachy
 import org.kde.kwindowsystem
 
 ColumnLayout {
@@ -122,7 +123,7 @@ ColumnLayout {
                     lineHeight: toolTipDelegate.isWin && Plasmoid.configuration.showToolTips ? 1 : appNameHeading.lineHeight
                     elide: Text.ElideRight
                     text: toolTipDelegate.appName
-                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyTheme.textPrimary
                     opacity: root.index === 0 ? 1 : 0
                     visible: (text.length !== 0) && (root.orientation === ListView.Horizontal || root.index === 0)
                     textFormat: Text.PlainText
@@ -138,7 +139,7 @@ ColumnLayout {
                     text: ((root.titleIncludesTrack && playerController.active) ||
                            (root.title === appNameHeading.text && somethingVisible))
                           ? "" : root.title
-                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyTheme.textPrimary
                     opacity: 0.75
                     visible: root.orientation === ListView.Horizontal || text.length !== 0
                     textFormat: Text.PlainText
@@ -150,7 +151,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                     text: toolTipDelegate.isWin ? root.generateSubText() : ""
-                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyTheme.textPrimary
                     opacity: 0.75
                     visible: text.length !== 0 && text !== appNameHeading.text
                     textFormat: Text.PlainText

@@ -6,7 +6,7 @@
 */
 
 import QtQuick
-import org.kde.kirigami as Kirigami
+import CachyOS.UI as Cachy
 
 Item {
     id: root
@@ -69,7 +69,7 @@ Item {
             anchors.fill: parent
             radius: root.radius
             color: {
-                const isDark = Kirigami.Theme.backgroundColor.hslLightness < 0.5;
+                const isDark = Cachy.CachyTheme.isDark;
                 return isDark
                     ? Qt.rgba(0.12, 0.12, 0.15, root.blurOpacity)
                     : Qt.rgba(0.96, 0.97, 1.0, root.blurOpacity);
