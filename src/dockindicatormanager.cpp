@@ -214,7 +214,7 @@ bool DockIndicatorManager::progressVisible(const QString &appId, const QString &
 {
     const QString normAppId = normalizeKey(appId);
     if (!normAppId.isEmpty() && m_indicators.contains(normAppId)) {
-        if (m_indicators.value(normAppId).progressVisible) {
+        if (m_indicators.value(normAppId).progressVisible && m_indicators.value(normAppId).progress > 0.0) {
             return true;
         }
     }
@@ -227,7 +227,7 @@ bool DockIndicatorManager::progressVisible(const QString &appId, const QString &
     }
 
     if (!normLauncher.isEmpty() && m_indicators.contains(normLauncher)) {
-        if (m_indicators.value(normLauncher).progressVisible) {
+        if (m_indicators.value(normLauncher).progressVisible && m_indicators.value(normLauncher).progress > 0.0) {
             return true;
         }
     }

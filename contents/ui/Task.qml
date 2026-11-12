@@ -319,6 +319,9 @@ PlasmaCore.ToolTipArea {
     onToolTipVisibleChanged: toolTipVisible => {
         task.toolTipOpen = toolTipVisible;
         if (!toolTipVisible) {
+            if (tasksRoot.toolTipAreaItem === task) {
+                tasksRoot.toolTipAreaItem = null;
+            }
             tasksRoot.toolTipOpenedByClick = null;
         } else {
             tasksRoot.toolTipAreaItem = task;
@@ -332,6 +335,7 @@ PlasmaCore.ToolTipArea {
             : Kirigami.Units.toolTipDelay
         onTriggered: {
             if (task.isTaskHovered && task.active && !task.toolTipOpen) {
+                tasksRoot.toolTipAreaItem = task;
                 task.updateMainItemBindings();
                 task.showToolTip();
             }
@@ -371,6 +375,9 @@ PlasmaCore.ToolTipArea {
         } else {
             hoverToolTipTimer.stop();
             task.hideToolTip();
+            if (tasksRoot.toolTipAreaItem === task) {
+                tasksRoot.toolTipAreaItem = null;
+            }
             tasksRoot.toolTipOpenedByClick = null;
             if (tasksRoot) {
                 tasksRoot.clearHoveredTask(index);
