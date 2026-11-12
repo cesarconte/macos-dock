@@ -12,6 +12,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.plasma.plasmoid
 import org.kde.kirigami as Kirigami
+import CachyOS.UI as Cachy
 import org.cesar.dock 1.0
 
 PlasmaCore.PopupPlasmaWindow {
@@ -89,7 +90,7 @@ PlasmaCore.PopupPlasmaWindow {
                     font.bold: true
                     font.pixelSize: 14
                     font.family: "Cantarell, Noto Sans, sans-serif"
-                    color: Kirigami.Theme.textColor
+                    color: Cachy.CachyTheme.textPrimary
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -117,7 +118,7 @@ PlasmaCore.PopupPlasmaWindow {
                         text: i18n("Abrir en Dolphin")
                         font.pixelSize: 11
                         font.weight: Font.DemiBold
-                        color: Kirigami.Theme.textColor
+                        color: Cachy.CachyTheme.textPrimary
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -183,7 +184,7 @@ PlasmaCore.PopupPlasmaWindow {
 
                 Text {
                     text: i18n("La carpeta de descargas está vacía")
-                    color: Kirigami.Theme.disabledTextColor
+                    color: Cachy.CachyTheme.textMuted
                     font.pixelSize: 12
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -307,7 +308,7 @@ PlasmaCore.PopupPlasmaWindow {
                             font.pixelSize: 11
                             font.weight: fileItem.isHovered ? Font.Medium : Font.Normal
                             font.family: "Cantarell, Noto Sans, sans-serif"
-                            color: Kirigami.Theme.textColor
+                            color: Cachy.CachyTheme.textPrimary
                             elide: Text.ElideMiddle
                             maximumLineCount: 2
                             wrapMode: Text.WrapAnywhere

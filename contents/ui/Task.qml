@@ -15,6 +15,7 @@ import org.kde.ksvg as KSvg
 import org.kde.plasma.extras as PlasmaExtras
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.kirigami as Kirigami
+import CachyOS.UI as Cachy
 import "code/LayoutMetrics.js" as LayoutMetrics
 import "code/TaskTools.js" as TaskTools
 import org.kde.plasma.plasmoid
@@ -1000,7 +1001,7 @@ PlasmaCore.ToolTipArea {
             GradientStop { position: 0.0; color: "transparent" }
             GradientStop {
                 position: 0.5
-                color: Kirigami.Theme.backgroundColor.hslLightness < 0.5
+                color: Cachy.CachyTheme.isDark
                     ? Qt.rgba(1.0, 1.0, 1.0, 0.22)
                     : Qt.rgba(0.0, 0.0, 0.0, 0.12)
             }
@@ -1018,7 +1019,7 @@ PlasmaCore.ToolTipArea {
         width: task.isTaskActive ? 5 : 4
         height: task.isTaskActive ? 5 : 4
         radius: width / 2
-        readonly property bool isDarkTheme: Kirigami.Theme.backgroundColor.hslLightness < 0.5
+        readonly property bool isDarkTheme: Cachy.CachyTheme.isDark
         color: {
             if (isDarkTheme) {
                 return task.isTaskActive ? Qt.rgba(1.0, 1.0, 1.0, 1.0) : Qt.rgba(1.0, 1.0, 1.0, 0.50);
@@ -1091,7 +1092,7 @@ PlasmaCore.ToolTipArea {
         width: tasksRoot.vertical ? Math.round(tasksRoot.iconSize * 0.55) : 1
         height: !tasksRoot.vertical ? Math.round(tasksRoot.iconSize * 0.55) : 1
         radius: 0.5
-        color: Kirigami.Theme.backgroundColor.hslLightness < 0.5 ? Qt.rgba(1.0, 1.0, 1.0, 0.28) : Qt.rgba(0.0, 0.0, 0.0, 0.22)
+        color: Cachy.CachyTheme.isDark ? Qt.rgba(1.0, 1.0, 1.0, 0.28) : Qt.rgba(0.0, 0.0, 0.0, 0.22)
 
         anchors {
             // Horizontal dock: center vertically in capsule, position at left + dividerSpan/2

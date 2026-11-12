@@ -14,6 +14,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.ksvg as KSvg
 import org.kde.plasma.private.mpris as Mpris
 import org.kde.kirigami as Kirigami
+import CachyOS.UI as Cachy
 
 import org.kde.plasma.workspace.trianglemousefilter
 
@@ -1007,7 +1008,7 @@ PlasmoidItem {
                         anchors.verticalCenter: !tasks.vertical ? parent.verticalCenter : undefined
                         anchors.horizontalCenter: tasks.vertical ? parent.horizontalCenter : undefined
                         radius: 0.5
-                        color: Kirigami.Theme.backgroundColor.hslLightness < 0.5
+                        color: Cachy.CachyTheme.isDark
                             ? Qt.rgba(1.0, 1.0, 1.0, 0.28)
                             : Qt.rgba(0.0, 0.0, 0.0, 0.22)
                     }

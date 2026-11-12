@@ -12,6 +12,7 @@ import QtQuick.Dialogs as QtDialogs
 
 import org.kde.kcmutils as KCMUtils
 import org.kde.kirigami as Kirigami
+import CachyOS.UI as Cachy
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 
@@ -236,7 +237,7 @@ KCMUtils.SimpleKCM {
                 height: Kirigami.Units.gridUnit * 1.5
                 radius: Kirigami.Units.smallSpacing
                 color: root.cfg_containerBackgroundColor
-                border.color: Kirigami.Theme.separatorColor
+                border.color: Cachy.CachyTheme.dividerColor
                 border.width: 1
             }
 
@@ -351,7 +352,7 @@ KCMUtils.SimpleKCM {
                 height: Kirigami.Units.gridUnit * 1.5
                 radius: Kirigami.Units.smallSpacing
                 color: root.cfg_containerBorderColor
-                border.color: Kirigami.Theme.separatorColor
+                border.color: Cachy.CachyTheme.dividerColor
                 border.width: 1
             }
 
