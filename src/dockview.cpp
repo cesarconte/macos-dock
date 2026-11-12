@@ -115,6 +115,8 @@ void DockView::setApplet(Plasma::Applet *applet)
     }
 
     if (auto engine = qmlEngine(m_appletInterface)) {
+        engine->addImportPath(QStringLiteral("/home/cesar/.local/lib/qt6/qml"));
+        engine->addImportPath(QStringLiteral("/usr/lib/qt6/qml"));
         engine->rootContext()->setContextProperty(QStringLiteral("dockBackend"), m_backend);
     }
     m_appletInterface->setProperty("dockBackend", QVariant::fromValue(static_cast<QObject *>(m_backend)));
