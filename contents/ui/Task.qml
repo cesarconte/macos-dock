@@ -319,9 +319,6 @@ PlasmaCore.ToolTipArea {
     onToolTipVisibleChanged: toolTipVisible => {
         task.toolTipOpen = toolTipVisible;
         if (!toolTipVisible) {
-            if (tasksRoot.toolTipAreaItem === task) {
-                tasksRoot.toolTipAreaItem = null;
-            }
             tasksRoot.toolTipOpenedByClick = null;
         } else {
             tasksRoot.toolTipAreaItem = task;
@@ -330,7 +327,7 @@ PlasmaCore.ToolTipArea {
 
     Timer {
         id: hoverToolTipTimer
-        interval: (tasksRoot && tasksRoot.toolTipAreaItem && tasksRoot.toolTipAreaItem.toolTipOpen)
+        interval: (tasksRoot && tasksRoot.toolTipAreaItem)
             ? 0
             : Kirigami.Units.toolTipDelay
         onTriggered: {
@@ -366,7 +363,16 @@ PlasmaCore.ToolTipArea {
 
     onIsTaskHoveredChanged: {
         if (isTaskHovered) {
-            hoverToolTipTimer.restart();
+            const wasOpen = !!(tasksRoot && tasksRoot.toolTipAreaItem && tasksRoot.toolTipAreaItem.toolTipOpen && tasksRoot.toolTipAreaItem !== task);
+            if (wasOpen) {
+                tasksRoot.toolTipAreaItem.hideToolTip();
+            }
+            task.updateMainItemBindings();
+            if (wasOpen) {
+                task.showToolTip();
+            } else {
+                hoverToolTipTimer.restart();
+            }
             if (taskHoverHandler && taskHoverHandler.hovered) {
                 reportContinuousHover(taskHoverHandler.point.position);
             } else if (tasksRoot) {
@@ -375,9 +381,6 @@ PlasmaCore.ToolTipArea {
         } else {
             hoverToolTipTimer.stop();
             task.hideToolTip();
-            if (tasksRoot.toolTipAreaItem === task) {
-                tasksRoot.toolTipAreaItem = null;
-            }
             tasksRoot.toolTipOpenedByClick = null;
             if (tasksRoot) {
                 tasksRoot.clearHoveredTask(index);
