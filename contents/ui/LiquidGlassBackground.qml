@@ -14,9 +14,9 @@ Item {
     property real radius: Math.min(width, height) / 3
     // 0 = Solid, 1 = Transparent (Panel Colorizer / Native), 2 = Translucent, 3 = LiquidGlass, 4 = LiquidGlass
     property int backgroundType: 1
-    property color customBackgroundColor: "#202024"
+    property color customBackgroundColor: Cachy.CachyPalette.windowBackground
     property int customBorderWidth: 1
-    property color customBorderColor: "#38ffffff"
+    property color customBorderColor: Cachy.CachyPalette.specularBorder
     property bool isVertical: false
 
     property real blurOpacity: 0.35
@@ -69,7 +69,7 @@ Item {
             anchors.fill: parent
             radius: root.radius
             color: {
-                const isDark = Cachy.CachyTheme.isDark;
+                const isDark = Cachy.CachyPalette.isDark;
                 return isDark
                     ? Qt.rgba(0.12, 0.12, 0.15, root.blurOpacity)
                     : Qt.rgba(0.96, 0.97, 1.0, root.blurOpacity);

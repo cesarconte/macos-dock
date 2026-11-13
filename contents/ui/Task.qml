@@ -1011,7 +1011,7 @@ PlasmaCore.ToolTipArea {
             GradientStop { position: 0.0; color: "transparent" }
             GradientStop {
                 position: 0.5
-                color: Cachy.CachyTheme.isDark
+                color: Cachy.CachyPalette.isDark
                     ? Qt.rgba(1.0, 1.0, 1.0, 0.22)
                     : Qt.rgba(0.0, 0.0, 0.0, 0.12)
             }
@@ -1029,7 +1029,7 @@ PlasmaCore.ToolTipArea {
         width: task.isTaskActive ? 5 : 4
         height: task.isTaskActive ? 5 : 4
         radius: width / 2
-        readonly property bool isDarkTheme: Cachy.CachyTheme.isDark
+        readonly property bool isDarkTheme: Cachy.CachyPalette.isDark
         color: {
             if (isDarkTheme) {
                 return task.isTaskActive ? Qt.rgba(1.0, 1.0, 1.0, 1.0) : Qt.rgba(1.0, 1.0, 1.0, 0.50);
@@ -1102,7 +1102,7 @@ PlasmaCore.ToolTipArea {
         width: tasksRoot.vertical ? Math.round(tasksRoot.iconSize * 0.55) : 1
         height: !tasksRoot.vertical ? Math.round(tasksRoot.iconSize * 0.55) : 1
         radius: 0.5
-        color: Cachy.CachyTheme.isDark ? Qt.rgba(1.0, 1.0, 1.0, 0.28) : Qt.rgba(0.0, 0.0, 0.0, 0.22)
+        color: Cachy.CachyPalette.isDark ? Qt.rgba(1.0, 1.0, 1.0, 0.28) : Qt.rgba(0.0, 0.0, 0.0, 0.22)
 
         anchors {
             // Horizontal dock: center vertically in capsule, position at left + dividerSpan/2
@@ -1121,7 +1121,7 @@ PlasmaCore.ToolTipArea {
         id: label
 
         visible: (task.inPopup || !task.tasksRoot.iconsOnly && !task.model.IsLauncher
-            && (parent.width - iconBox.height - Kirigami.Units.smallSpacing) >= LayoutMetrics.spaceRequiredToShowText())
+            && (parent.width - iconBox.height - Cachy.CachyTheme.spacingSmall) >= LayoutMetrics.spaceRequiredToShowText())
 
         anchors {
             fill: parent

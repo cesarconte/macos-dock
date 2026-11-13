@@ -90,7 +90,7 @@ PlasmaCore.PopupPlasmaWindow {
                     font.bold: true
                     font.pixelSize: 14
                     font.family: "Cantarell, Noto Sans, sans-serif"
-                    color: Cachy.CachyTheme.textPrimary
+                    color: Cachy.CachyPalette.text
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -102,7 +102,7 @@ PlasmaCore.PopupPlasmaWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: openRow.implicitWidth + 18
                 height: 28
-                radius: 14
+                radius: Cachy.CachyTheme.radiusMedium
                 color: openBtnMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(1, 1, 1, 0.08)
 
                 Behavior on color {
@@ -118,7 +118,7 @@ PlasmaCore.PopupPlasmaWindow {
                         text: i18n("Abrir en Dolphin")
                         font.pixelSize: 11
                         font.weight: Font.DemiBold
-                        color: Cachy.CachyTheme.textPrimary
+                        color: Cachy.CachyPalette.text
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -184,7 +184,7 @@ PlasmaCore.PopupPlasmaWindow {
 
                 Text {
                     text: i18n("La carpeta de descargas está vacía")
-                    color: Cachy.CachyTheme.textMuted
+                    color: Cachy.CachyPalette.textMuted
                     font.pixelSize: 12
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -259,7 +259,7 @@ PlasmaCore.PopupPlasmaWindow {
                         id: highlightPill
                         anchors.fill: parent
                         anchors.margins: 4
-                        radius: 12
+                        radius: Cachy.CachyTheme.radiusMedium
                         color: fileItem.isHovered ? Qt.rgba(1, 1, 1, 0.18) : "transparent"
                         border.color: fileItem.isHovered ? Qt.rgba(1, 1, 1, 0.28) : "transparent"
                         border.width: 1
@@ -308,7 +308,7 @@ PlasmaCore.PopupPlasmaWindow {
                             font.pixelSize: 11
                             font.weight: fileItem.isHovered ? Font.Medium : Font.Normal
                             font.family: "Cantarell, Noto Sans, sans-serif"
-                            color: Cachy.CachyTheme.textPrimary
+                            color: Cachy.CachyPalette.text
                             elide: Text.ElideMiddle
                             maximumLineCount: 2
                             wrapMode: Text.WrapAnywhere
@@ -346,7 +346,7 @@ PlasmaCore.PopupPlasmaWindow {
 
             width: Math.min(270, tooltipCol.implicitWidth + 24)
             height: tooltipCol.implicitHeight + 14
-            radius: 10
+            radius: Cachy.CachyTheme.radiusSmall
             color: Qt.rgba(0.12, 0.12, 0.14, 0.94)
             border.color: Qt.rgba(1, 1, 1, 0.22)
             border.width: 1
@@ -396,7 +396,7 @@ PlasmaCore.PopupPlasmaWindow {
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
                     font.family: "Cantarell, Noto Sans, sans-serif"
-                    color: "#FFFFFF"
+                    color: Cachy.CachyPalette.text
                     elide: Text.ElideMiddle
                     maximumLineCount: 3
                     wrapMode: Text.WrapAnywhere

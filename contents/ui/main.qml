@@ -177,11 +177,11 @@ PlasmoidItem {
     readonly property int containerBackgroundType: Plasmoid.configuration.containerBackgroundType !== undefined
         ? Plasmoid.configuration.containerBackgroundType
         : 0
-    readonly property color containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || "#202024"
+    readonly property color containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || Cachy.CachyPalette.windowBackground
     readonly property int containerBorderWidth: Plasmoid.configuration.containerBorderWidth !== undefined
         ? Plasmoid.configuration.containerBorderWidth
         : 1
-    readonly property color containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
+    readonly property color containerBorderColor: Plasmoid.configuration.containerBorderColor || Cachy.CachyPalette.specularBorder
     readonly property real blurOpacity: (Plasmoid.configuration.blurOpacity !== undefined && Plasmoid.configuration.blurOpacity > 0)
         ? Plasmoid.configuration.blurOpacity
         : 0.35
@@ -1008,7 +1008,7 @@ PlasmoidItem {
                         anchors.verticalCenter: !tasks.vertical ? parent.verticalCenter : undefined
                         anchors.horizontalCenter: tasks.vertical ? parent.horizontalCenter : undefined
                         radius: 0.5
-                        color: Cachy.CachyTheme.isDark
+                        color: Cachy.CachyPalette.isDark
                             ? Qt.rgba(1.0, 1.0, 1.0, 0.28)
                             : Qt.rgba(0.0, 0.0, 0.0, 0.22)
                     }

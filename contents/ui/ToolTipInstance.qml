@@ -78,7 +78,7 @@ ColumnLayout {
     readonly property bool titleIncludesTrack: toolTipDelegate.playerData !== null && title.includes(toolTipDelegate.playerData.track)
 
     // Lots of spacing with no thumbnails looks bad
-    spacing: Plasmoid.configuration.showToolTips ? Kirigami.Units.smallSpacing : 0
+    spacing: Plasmoid.configuration.showToolTips ? Cachy.CachyTheme.spacingSmall : 0
 
     // text labels + close button
     Item {
@@ -98,7 +98,7 @@ ColumnLayout {
             id: header
             width: parent.width
             // match spacing of DefaultToolTip.qml in plasma-framework
-            spacing: Kirigami.Units.smallSpacing
+            spacing: Cachy.CachyTheme.spacingSmall
 
             // close button for right edge ltr and left edge rtl
             LayoutItemProxy {
@@ -123,7 +123,7 @@ ColumnLayout {
                     lineHeight: toolTipDelegate.isWin && Plasmoid.configuration.showToolTips ? 1 : appNameHeading.lineHeight
                     elide: Text.ElideRight
                     text: toolTipDelegate.appName
-                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyTheme.textPrimary
+                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyPalette.text
                     opacity: root.index === 0 ? 1 : 0
                     visible: (text.length !== 0) && (root.orientation === ListView.Horizontal || root.index === 0)
                     textFormat: Text.PlainText
@@ -139,7 +139,7 @@ ColumnLayout {
                     text: ((root.titleIncludesTrack && playerController.active) ||
                            (root.title === appNameHeading.text && somethingVisible))
                           ? "" : root.title
-                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyTheme.textPrimary
+                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyPalette.text
                     opacity: 0.75
                     visible: root.orientation === ListView.Horizontal || text.length !== 0
                     textFormat: Text.PlainText
@@ -151,7 +151,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                     text: toolTipDelegate.isWin ? root.generateSubText() : ""
-                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyTheme.textPrimary
+                    color: (headerHoverHandler.visible && headerHoverHighlight.pressed) ? Cachy.CachyTheme.accentColor : Cachy.CachyPalette.text
                     opacity: 0.75
                     visible: text.length !== 0 && text !== appNameHeading.text
                     textFormat: Text.PlainText
@@ -254,7 +254,7 @@ ColumnLayout {
             anchors.fill: hoverHandler
             // Indent a little bit so that neither the thumbnail nor the drop
             // shadow can cover up the highlight
-            anchors.margins: Kirigami.Units.smallSpacing * 2
+            anchors.margins: Cachy.CachyTheme.spacingSmall * 2
 
             source: ""
             sourceComponent: iconItem
@@ -318,7 +318,7 @@ ColumnLayout {
             sourceComponent: GE.DropShadow {
                 horizontalOffset: 0
                 verticalOffset: 3
-                radius: 8
+                radius: Cachy.CachyTheme.radiusSmall
                 samples: Math.round(radius * 1.5)
                 color: "Black"
                 source: pipeWireLoader.active ? pipeWireLoader.item : thumbnailLoader.item // source could be undefined when albumArt is available, so put it in a Loader.

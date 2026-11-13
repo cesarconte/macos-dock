@@ -36,13 +36,13 @@ KCMUtils.SimpleKCM {
     property alias cfg_hoverElevation: hoverElevationSpinBox.value
 
     property alias cfg_containerBackgroundType: containerBackgroundTypeComboBox.currentIndex
-    property color cfg_containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || "#202024"
+    property color cfg_containerBackgroundColor: Plasmoid.configuration.containerBackgroundColor || Cachy.CachyPalette.windowBackground
     property real cfg_blurOpacity: Plasmoid.configuration.blurOpacity !== undefined ? Plasmoid.configuration.blurOpacity : 0.35
     property real cfg_blurSaturation: Plasmoid.configuration.blurSaturation !== undefined ? Plasmoid.configuration.blurSaturation : 1.3
     property real cfg_blurContrast: Plasmoid.configuration.blurContrast !== undefined ? Plasmoid.configuration.blurContrast : 1.0
     property real cfg_blurBrightness: Plasmoid.configuration.blurBrightness !== undefined ? Plasmoid.configuration.blurBrightness : 1.0
     property alias cfg_containerBorderWidth: containerBorderWidthSpinBox.value
-    property color cfg_containerBorderColor: Plasmoid.configuration.containerBorderColor || "#38ffffff"
+    property color cfg_containerBorderColor: Plasmoid.configuration.containerBorderColor || Cachy.CachyPalette.specularBorder
     property alias cfg_autoAdjustPanelThickness: autoAdjustPanelThicknessCheckBox.checked
 
     onCfg_zoomMultiplierChanged: {
@@ -230,14 +230,14 @@ KCMUtils.SimpleKCM {
         RowLayout {
             visible: containerBackgroundTypeComboBox.currentIndex === 0 || containerBackgroundTypeComboBox.currentIndex === 2
             Kirigami.FormData.label: i18nc("@label", "Background color:")
-            spacing: Kirigami.Units.smallSpacing
+            spacing: Cachy.CachyTheme.spacingSmall
 
             Rectangle {
                 width: Kirigami.Units.gridUnit * 1.5
                 height: Kirigami.Units.gridUnit * 1.5
-                radius: Kirigami.Units.smallSpacing
+                radius: Cachy.CachyTheme.radiusSmall
                 color: root.cfg_containerBackgroundColor
-                border.color: Cachy.CachyTheme.dividerColor
+                border.color: Cachy.CachyPalette.dividerColor
                 border.width: 1
             }
 
@@ -345,14 +345,14 @@ KCMUtils.SimpleKCM {
         RowLayout {
             visible: containerBackgroundTypeComboBox.currentIndex !== 1 && containerBorderWidthSpinBox.value > 0
             Kirigami.FormData.label: i18nc("@label", "Border color:")
-            spacing: Kirigami.Units.smallSpacing
+            spacing: Cachy.CachyTheme.spacingSmall
 
             Rectangle {
                 width: Kirigami.Units.gridUnit * 1.5
                 height: Kirigami.Units.gridUnit * 1.5
-                radius: Kirigami.Units.smallSpacing
+                radius: Cachy.CachyTheme.radiusSmall
                 color: root.cfg_containerBorderColor
-                border.color: Cachy.CachyTheme.dividerColor
+                border.color: Cachy.CachyPalette.dividerColor
                 border.width: 1
             }
 
